@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.09.28.2";
+  const VERSION = "2026.09.28.3";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -257,7 +257,7 @@
       #dbdoor-chip, #dbdoor-modal, #dbdoor-modal *, #dbdoor-fireworks, #dbdoor-fireworks * { box-sizing:border-box; }
       #dbdoor-chip[hidden], #dbdoor-modal[hidden], #dbdoor-fireworks[hidden] { display:none !important; }
       #dbdoor-chip {
-        position:fixed; z-index:2147483602; right:10px; bottom:max(46px, calc(env(safe-area-inset-bottom) + 46px));
+        position:fixed; z-index:2147483602; right:10px; bottom:max(100px, calc(env(safe-area-inset-bottom) + 100px));
         display:flex; align-items:stretch; border:2px solid #111; background:#f3df68; color:#111;
         box-shadow:4px 4px 0 #111; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         animation:dbdoor-pulse .72s steps(2,end) 7;
