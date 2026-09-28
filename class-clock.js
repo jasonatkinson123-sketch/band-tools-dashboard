@@ -1,9 +1,10 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.09.28.1";
+  const VERSION = "2026.09.28.2";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
+  const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
   const COUNTDOWN_SECONDS = 5 * 60;
   const BELL_HOLD_SECONDS = 12;
 
@@ -56,6 +57,35 @@
       { grade: "6TH", end: "13:31" },
       { grade: "8TH", end: "14:13" },
       { grade: "7TH", end: "14:55" }
+    ]
+  };
+
+  // Approx. ten minutes into each band class. The full-day 6th-grade split block
+  // prompts once before lunch rather than prompting a second time after lunch.
+  const DOOR_KEEPER_PROMPTS = {
+    full: [
+      { grade: "6TH", at: "08:45", end: "09:33" },
+      { grade: "7TH", at: "09:46", end: "10:31" },
+      { grade: "8TH", at: "10:44", end: "11:29" },
+      { grade: "6TH", at: "11:42", end: "12:01" },
+      { grade: "8TH", at: "13:14", end: "13:58" },
+      { grade: "7TH", at: "14:11", end: "14:55" }
+    ],
+    early: [
+      { grade: "6TH", at: "08:45", end: "09:09" },
+      { grade: "7TH", at: "09:22", end: "09:43" },
+      { grade: "8TH", at: "09:56", end: "10:17" },
+      { grade: "6TH", at: "10:30", end: "10:47" },
+      { grade: "8TH", at: "11:00", end: "11:17" },
+      { grade: "7TH", at: "11:30", end: "12:25" }
+    ],
+    delay: [
+      { grade: "6TH", at: "10:31", end: "11:19" },
+      { grade: "7TH", at: "11:32", end: "11:58" },
+      { grade: "8TH", at: "12:11", end: "12:28" },
+      { grade: "6TH", at: "12:41", end: "13:31" },
+      { grade: "8TH", at: "13:44", end: "14:13" },
+      { grade: "7TH", at: "14:26", end: "14:55" }
     ]
   };
 
@@ -224,12 +254,66 @@
       #dbclock-options button[aria-pressed="true"] { background:#111; color:#fff; }
       #dbclock-preview { width:100%; margin-top:7px; background:#fff2a8; }
       #dbclock-menu-note { margin:8px 0 0; font-size:9px; line-height:1.35; opacity:.72; }
+      #dbdoor-chip, #dbdoor-modal, #dbdoor-modal *, #dbdoor-fireworks, #dbdoor-fireworks * { box-sizing:border-box; }
+      #dbdoor-chip[hidden], #dbdoor-modal[hidden], #dbdoor-fireworks[hidden] { display:none !important; }
+      #dbdoor-chip {
+        position:fixed; z-index:2147483602; right:10px; bottom:max(46px, calc(env(safe-area-inset-bottom) + 46px));
+        display:flex; align-items:stretch; border:2px solid #111; background:#f3df68; color:#111;
+        box-shadow:4px 4px 0 #111; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        animation:dbdoor-pulse .72s steps(2,end) 7;
+      }
+      #dbdoor-open, #dbdoor-dismiss {
+        appearance:none; border:0; background:transparent; color:#111; cursor:pointer; font:900 10px/1 ui-monospace, monospace;
+      }
+      #dbdoor-open { padding:9px 10px; letter-spacing:.07em; text-transform:uppercase; }
+      #dbdoor-dismiss { width:29px; border-left:2px solid #111; font-size:16px; }
+      #dbdoor-open:focus-visible, #dbdoor-dismiss:focus-visible { outline:3px solid #6f4aa8; outline-offset:2px; }
+      #dbdoor-modal {
+        position:fixed; z-index:2147483638; inset:0; display:grid; place-items:center; padding:20px;
+        background:rgba(17,17,17,.38); backdrop-filter:blur(2px);
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      #dbdoor-card {
+        position:relative; width:min(620px, calc(100vw - 28px)); padding:24px;
+        border:4px solid #111; background:#fffdf7; color:#111; box-shadow:12px 12px 0 #6f4aa8;
+      }
+      #dbdoor-card.dbdoor-celebrate { background:#fff2a8; text-align:center; }
+      #dbdoor-close {
+        position:absolute; right:10px; top:8px; appearance:none; border:0; background:transparent; color:#111;
+        cursor:pointer; font:900 27px/1 ui-monospace, monospace; padding:3px 6px;
+      }
+      #dbdoor-eyebrow { margin:0 42px 9px 0; font-size:11px; font-weight:900; letter-spacing:.15em; color:#6f4aa8; text-transform:uppercase; }
+      #dbdoor-title { margin:0; font:950 clamp(36px,8vw,70px)/.9 ui-monospace, monospace; letter-spacing:-.06em; text-transform:uppercase; overflow-wrap:anywhere; }
+      #dbdoor-prompt { margin:12px 0 18px; font:900 12px/1.3 ui-monospace, monospace; letter-spacing:.08em; text-transform:uppercase; }
+      #dbdoor-form { display:flex; gap:9px; align-items:stretch; }
+      #dbdoor-name {
+        min-width:0; flex:1; border:3px solid #111; background:#fff; color:#111; padding:12px 13px;
+        font:900 clamp(20px,4vw,30px)/1 ui-monospace, monospace; outline:none;
+      }
+      #dbdoor-name:focus { box-shadow:4px 4px 0 #6f4aa8; }
+      #dbdoor-submit {
+        appearance:none; border:3px solid #111; background:#111; color:#fff; cursor:pointer; padding:10px 16px;
+        font:900 11px/1 ui-monospace, monospace; letter-spacing:.08em; text-transform:uppercase;
+      }
+      #dbdoor-fireworks { position:fixed; z-index:2147483640; inset:0; pointer-events:none; overflow:hidden; }
+      .dbdoor-spark {
+        position:absolute; width:9px; height:9px; border-radius:50%;
+        animation:dbdoor-fly 1050ms cubic-bezier(.17,.84,.44,1) forwards;
+        transform:translate(-50%,-50%);
+      }
+      @keyframes dbdoor-pulse { 50% { transform:translateY(-2px); box-shadow:6px 6px 0 #6f4aa8; } }
+      @keyframes dbdoor-fly {
+        0% { opacity:1; transform:translate(-50%,-50%) scale(.2); }
+        78% { opacity:1; }
+        100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); }
+      }
       @media (max-width:600px) {
         #dbclock-box { left:10px; right:10px; top:10px; width:auto; }
         #dbclock-time { font-size:52px; }
       }
       @media (prefers-reduced-motion:reduce) {
         #dbclock-box { transition:none; }
+        #dbdoor-chip, .dbdoor-spark { animation:none !important; }
       }
     `;
     document.head.appendChild(style);
@@ -270,17 +354,50 @@
         <button type="button" data-dbclock-mode="early">EARLY</button>
         <button type="button" data-dbclock-mode="delay">2-HR DELAY</button>
         <button type="button" data-dbclock-mode="off">OFF TODAY</button>
+        <button id="dbdoor-preview" type="button">TEST DOOR KEEPER</button>
       </div>
       <button id="dbclock-preview" type="button">PREVIEW COUNTDOWN</button>
       <p id="dbclock-menu-note">Early-dismissal dates switch automatically. Use 2-HR DELAY on weather-delay days; the override resets tomorrow.</p>
     `;
 
-    document.body.append(box, chip, menu);
+    const doorChip = document.createElement("div");
+    doorChip.id = "dbdoor-chip";
+    doorChip.hidden = true;
+    doorChip.innerHTML = \`
+      <button id="dbdoor-open" type="button">STAND DOOR KEEPER</button>
+      <button id="dbdoor-dismiss" type="button" aria-label="Dismiss Stand Door Keeper reminder">×</button>
+    \`;
+
+    const doorModal = document.createElement("div");
+    doorModal.id = "dbdoor-modal";
+    doorModal.hidden = true;
+    doorModal.innerHTML = \`
+      <section id="dbdoor-card" role="dialog" aria-modal="true" aria-labelledby="dbdoor-title">
+        <button id="dbdoor-close" type="button" aria-label="Close Stand Door Keeper">×</button>
+        <p id="dbdoor-eyebrow">DERBY BAND • CLASS JOB</p>
+        <h2 id="dbdoor-title">STAND DOOR KEEPER</h2>
+        <p id="dbdoor-prompt">TYPE THE STUDENT'S NAME</p>
+        <form id="dbdoor-form">
+          <input id="dbdoor-name" type="text" autocomplete="off" maxlength="40" placeholder="STUDENT NAME" aria-label="Student name" />
+          <button id="dbdoor-submit" type="submit">ENTER</button>
+        </form>
+      </section>
+    \`;
+
+    const doorFireworks = document.createElement("div");
+    doorFireworks.id = "dbdoor-fireworks";
+    doorFireworks.hidden = true;
+    doorFireworks.setAttribute("aria-hidden", "true");
+
+    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks);
   }
 
   let dismissedSlotKey = "";
   let previewStartedAt = 0;
   let previewActive = false;
+  let activeDoorPrompt = null;
+  let activeDoorPromptKey = "";
+  let doorPreviewMode = false;
 
   function refs() {
     return {
@@ -293,7 +410,20 @@
       close: document.getElementById("dbclock-close"),
       chip: document.getElementById("dbclock-chip"),
       menu: document.getElementById("dbclock-menu"),
-      preview: document.getElementById("dbclock-preview")
+      preview: document.getElementById("dbclock-preview"),
+      doorPreview: document.getElementById("dbdoor-preview"),
+      doorChip: document.getElementById("dbdoor-chip"),
+      doorOpen: document.getElementById("dbdoor-open"),
+      doorDismiss: document.getElementById("dbdoor-dismiss"),
+      doorModal: document.getElementById("dbdoor-modal"),
+      doorCard: document.getElementById("dbdoor-card"),
+      doorClose: document.getElementById("dbdoor-close"),
+      doorEyebrow: document.getElementById("dbdoor-eyebrow"),
+      doorTitle: document.getElementById("dbdoor-title"),
+      doorPrompt: document.getElementById("dbdoor-prompt"),
+      doorForm: document.getElementById("dbdoor-form"),
+      doorName: document.getElementById("dbdoor-name"),
+      doorFireworks: document.getElementById("dbdoor-fireworks")
     };
   }
 
@@ -306,6 +436,136 @@
 
   function slotKey(today, mode, slot) {
     return slot ? `${today}|${mode}|${slot.grade}|${slot.end}` : "";
+  }
+
+  function doorKey(today, mode, prompt) {
+    return prompt ? \`${today}|${mode}|${prompt.grade}|${prompt.end}\` : "";
+  }
+
+  function readDoorState(today) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DOOR_STORAGE_KEY) || "null");
+      if (!saved || saved.date !== today || !Array.isArray(saved.keys)) return { date: today, keys: [] };
+      return saved;
+    } catch {
+      return { date: today, keys: [] };
+    }
+  }
+
+  function markDoorHandled(today, key) {
+    if (!key) return;
+    try {
+      const state = readDoorState(today);
+      if (!state.keys.includes(key)) state.keys.push(key);
+      localStorage.setItem(DOOR_STORAGE_KEY, JSON.stringify(state));
+    } catch {}
+  }
+
+  function doorPromptFor(today, weekday, requestedMode, actualMode, secondsNow) {
+    if (isWeekend(weekday) || isClosed(today) || actualMode === "off") return null;
+    const prompts = DOOR_KEEPER_PROMPTS[actualMode] || [];
+    return prompts.find(prompt => {
+      const start = toSeconds(prompt.at);
+      const stop = Math.max(start + 60, toSeconds(prompt.end) - COUNTDOWN_SECONDS);
+      return secondsNow >= start && secondsNow < stop;
+    }) || null;
+  }
+
+  function renderDoorReminder(today, weekday, requestedMode, actualMode, secondsNow) {
+    const r = refs();
+    const prompt = doorPromptFor(today, weekday, requestedMode, actualMode, secondsNow);
+    const key = doorKey(today, actualMode, prompt);
+    const handled = key && readDoorState(today).keys.includes(key);
+
+    if (!prompt || handled) {
+      r.doorChip.hidden = true;
+      if (!doorPreviewMode) {
+        activeDoorPrompt = null;
+        activeDoorPromptKey = "";
+      }
+      return;
+    }
+
+    activeDoorPrompt = prompt;
+    activeDoorPromptKey = key;
+    r.doorOpen.textContent = \`STAND DOOR KEEPER • ${prompt.grade}\`;
+    r.doorChip.hidden = false;
+  }
+
+  function resetDoorModal(preview = false) {
+    const r = refs();
+    r.doorCard.classList.remove("dbdoor-celebrate");
+    r.doorEyebrow.textContent = preview ? "TEST MODE • CLASS JOB" : "DERBY BAND • CLASS JOB";
+    r.doorTitle.textContent = "STAND DOOR KEEPER";
+    r.doorPrompt.textContent = preview ? "TYPE ANY NAME TO TEST IT" : "TYPE THE STUDENT'S NAME";
+    r.doorForm.hidden = false;
+    r.doorName.value = "";
+    r.doorFireworks.replaceChildren();
+    r.doorFireworks.hidden = true;
+  }
+
+  function openDoorKeeper(preview = false) {
+    const r = refs();
+    doorPreviewMode = preview;
+    resetDoorModal(preview);
+    r.doorModal.hidden = false;
+    window.setTimeout(() => r.doorName.focus(), 40);
+  }
+
+  function closeDoorKeeper(handlePrompt = true) {
+    const r = refs();
+    const now = nyNow();
+    if (handlePrompt && !doorPreviewMode && activeDoorPromptKey) markDoorHandled(now.date, activeDoorPromptKey);
+    r.doorModal.hidden = true;
+    r.doorFireworks.replaceChildren();
+    r.doorFireworks.hidden = true;
+    doorPreviewMode = false;
+    tick();
+  }
+
+  function launchDoorFireworks() {
+    const r = refs();
+    r.doorFireworks.replaceChildren();
+    r.doorFireworks.hidden = false;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const colors = ["#6f4aa8", "#f3df68", "#ff6b6b", "#63d6c5", "#ffffff", "#111111"];
+    for (let burst = 0; burst < 8; burst++) {
+      const x = 14 + Math.random() * 72;
+      const y = 12 + Math.random() * 55;
+      for (let i = 0; i < 14; i++) {
+        const angle = (Math.PI * 2 * i) / 14 + Math.random() * .16;
+        const distance = 65 + Math.random() * 120;
+        const spark = document.createElement("span");
+        spark.className = "dbdoor-spark";
+        spark.style.left = x + "vw";
+        spark.style.top = y + "vh";
+        spark.style.background = colors[(burst + i) % colors.length];
+        spark.style.setProperty("--dx", Math.cos(angle) * distance + "px");
+        spark.style.setProperty("--dy", Math.sin(angle) * distance + "px");
+        spark.style.animationDelay = (burst * 70 + Math.random() * 90) + "ms";
+        r.doorFireworks.appendChild(spark);
+      }
+    }
+    window.setTimeout(() => {
+      r.doorFireworks.replaceChildren();
+      r.doorFireworks.hidden = true;
+    }, 1800);
+  }
+
+  function celebrateDoorKeeper(name) {
+    const r = refs();
+    const clean = name.trim();
+    if (!clean) return;
+    const now = nyNow();
+    if (!doorPreviewMode && activeDoorPromptKey) markDoorHandled(now.date, activeDoorPromptKey);
+    r.doorChip.hidden = true;
+    r.doorCard.classList.add("dbdoor-celebrate");
+    r.doorEyebrow.textContent = "TODAY'S STAND DOOR KEEPER";
+    r.doorTitle.textContent = clean.toUpperCase();
+    r.doorPrompt.textContent = "STAND DOOR KEEPER!";
+    r.doorForm.hidden = true;
+    launchDoorFireworks();
   }
 
   function renderMenuState(today, requested) {
@@ -348,6 +608,7 @@
     const actual = resolvedMode(now.date, requested);
     const schedule = scheduleFor(now.date, now.weekday, requested);
     renderMenuState(now.date, requested);
+    renderDoorReminder(now.date, now.weekday, requested, actual, now.seconds);
 
     if (previewActive) {
       const elapsed = (Date.now() - previewStartedAt) / 1000;
@@ -419,6 +680,31 @@
       tick();
     });
 
+    r.doorPreview.addEventListener("click", () => {
+      r.menu.hidden = true;
+      r.chip.setAttribute("aria-expanded", "false");
+      openDoorKeeper(true);
+    });
+
+    r.doorOpen.addEventListener("click", () => openDoorKeeper(false));
+    r.doorDismiss.addEventListener("click", () => {
+      const now = nyNow();
+      if (activeDoorPromptKey) markDoorHandled(now.date, activeDoorPromptKey);
+      r.doorChip.hidden = true;
+      tick();
+    });
+    r.doorClose.addEventListener("click", () => closeDoorKeeper(true));
+    r.doorModal.addEventListener("click", event => {
+      if (event.target === r.doorModal) closeDoorKeeper(true);
+    });
+    r.doorForm.addEventListener("submit", event => {
+      event.preventDefault();
+      celebrateDoorKeeper(r.doorName.value);
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !r.doorModal.hidden) closeDoorKeeper(true);
+    });
+
     document.addEventListener("click", event => {
       if (r.menu.hidden) return;
       if (r.menu.contains(event.target) || r.chip.contains(event.target)) return;
@@ -427,7 +713,7 @@
     });
 
     window.addEventListener("storage", event => {
-      if (event.key === STORAGE_KEY || event.key === null) {
+      if (event.key === STORAGE_KEY || event.key === DOOR_STORAGE_KEY || event.key === null) {
         dismissedSlotKey = "";
         tick();
       }
@@ -459,6 +745,9 @@
         dismissedSlotKey = "";
         tick();
         return true;
+      },
+      previewDoorKeeper() {
+        openDoorKeeper(true);
       }
     };
   }
