@@ -36,7 +36,7 @@
       { grade: "6TH", end: "09:33" },
       { grade: "7TH", end: "10:31" },
       { grade: "8TH", end: "11:29" },
-      { grade: "6TH", end: "12:01", note: "LUNCH" },
+      { grade: "6TH", end: "12:01", note: "LUNCH", countdownSeconds: 2 * 60 },
       { grade: "6TH", end: "13:01" },
       { grade: "8TH", end: "13:58" },
       { grade: "7TH", end: "14:55" }
@@ -154,7 +154,8 @@
   function currentSlot(schedule, secondsNow) {
     return schedule.find(slot => {
       const diff = toSeconds(slot.end) - secondsNow;
-      return diff <= COUNTDOWN_SECONDS && diff >= -BELL_HOLD_SECONDS;
+      const windowSeconds = slot.countdownSeconds || COUNTDOWN_SECONDS;
+      return diff <= windowSeconds && diff >= -BELL_HOLD_SECONDS;
     }) || null;
   }
 
@@ -331,7 +332,8 @@
     r.time.textContent = bell ? "0:00" : formatRemaining(remaining);
     r.end.textContent = isPreview ? "PREVIEW" : `BELL ${prettyTime(slot.end)}`;
     r.mode.textContent = isPreview ? "TEST" : MODES[actualMode];
-    const progress = bell ? 0 : Math.max(0, Math.min(1, remaining / COUNTDOWN_SECONDS));
+    const windowSeconds = slot.countdownSeconds || COUNTDOWN_SECONDS;
+    const progress = bell ? 0 : Math.max(0, Math.min(1, remaining / windowSeconds));
     r.bar.style.transform = `scaleX(${progress})`;
   }
 
