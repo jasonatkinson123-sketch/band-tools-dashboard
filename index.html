@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111111" />
+  <title>Derby Band Tools</title>
+  <style>
+    :root{
+      --ink:#111111;
+      --paper:#f7f6f2;
+      --card:#ffffff;
+      --purple:#6f4aa8;
+      --soft:#e9e6df;
+      --muted:#6f6b63;
+      --shadow:8px 8px 0 var(--ink);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink)}
+    body{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background-image:
+        linear-gradient(rgba(17,17,17,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17,17,17,.025) 1px, transparent 1px);
+      background-size:24px 24px;
+    }
+    .wrap{width:min(1180px,92vw);margin:0 auto;padding:34px 0 56px}
+    header{
+      display:flex;justify-content:space-between;gap:24px;align-items:flex-end;
+      border-bottom:3px solid var(--ink);padding-bottom:18px;margin-bottom:28px;
+    }
+    .eyebrow{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;color:var(--purple);font-weight:800}
+    h1{margin:0;font-size:clamp(2.1rem,6vw,5rem);line-height:.9;letter-spacing:-.055em;text-transform:uppercase}
+    .sub{max-width:420px;font-size:.95rem;line-height:1.45;color:var(--muted);margin:0}
+    .grid{
+      display:grid;grid-template-columns:repeat(12,1fr);gap:18px;
+    }
+    .tool{
+      position:relative;display:flex;flex-direction:column;justify-content:space-between;
+      min-height:220px;padding:22px;background:var(--card);border:3px solid var(--ink);
+      box-shadow:var(--shadow);text-decoration:none;color:var(--ink);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      overflow:hidden;
+    }
+    .tool:hover,.tool:focus-visible{
+      transform:translate(4px,4px);box-shadow:4px 4px 0 var(--ink);outline:none;background:#fffdf7
+    }
+    .tool:active{transform:translate(8px,8px);box-shadow:none}
+    .tool.large{grid-column:span 6;min-height:260px}
+    .tool.medium{grid-column:span 4}
+    .tool.small{grid-column:span 4}
+    .num{font-size:.72rem;letter-spacing:.15em;color:var(--purple);font-weight:800}
+    .name{font-size:clamp(1.55rem,3vw,2.6rem);font-weight:900;line-height:.95;letter-spacing:-.04em;text-transform:uppercase;max-width:90%}
+    .desc{font-family:Arial,Helvetica,sans-serif;font-size:.92rem;line-height:1.35;color:var(--muted);max-width:88%;margin-top:12px}
+    .arrow{position:absolute;right:18px;bottom:15px;font-size:2rem;font-weight:900}
+    .stamp{
+      position:absolute;right:-28px;top:18px;transform:rotate(10deg);
+      border:2px solid var(--purple);color:var(--purple);padding:4px 34px;font-size:.66rem;
+      letter-spacing:.14em;text-transform:uppercase;background:var(--card)
+    }
+    .footer{
+      display:flex;justify-content:space-between;gap:16px;align-items:center;
+      margin-top:34px;padding-top:16px;border-top:2px solid var(--ink);font-size:.75rem;color:var(--muted)
+    }
+    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--purple);margin-right:8px}
+    @media (max-width:800px){
+      header{align-items:flex-start;flex-direction:column}
+      .tool.large,.tool.medium,.tool.small{grid-column:span 12}
+      .tool{min-height:190px}
+      .sub{max-width:none}
+      .footer{align-items:flex-start;flex-direction:column}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .tool{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <div class="eyebrow">Derby Middle School · Band Room</div>
+        <h1>Band Tools</h1>
+      </div>
+      <p class="sub">One screen for the things we actually use: rehearse, choose, look up, request, count down, and recognize.</p>
+    </header>
+
+    <section class="grid" aria-label="Band tools">
+      <a class="tool large" href="https://jasonatkinson123-sketch.github.io/derby-band-rehearsal-board/" target="_blank" rel="noopener">
+        <div class="num">01 / TODAY</div>
+        <div>
+          <div class="name">Today's Rehearsal</div>
+          <div class="desc">6th, 7th, and 8th grade rehearsal boards, warmups, notes, and today’s set.</div>
+        </div>
+        <div class="stamp">daily driver</div>
+        <div class="arrow">↗</div>
+      </a>
+
+      <a class="tool large" href="https://jasonatkinson123-sketch.github.io/band-fingering-tool/" target="_blank" rel="noopener">
+        <div class="num">02 / LOOK UP</div>
+        <div>
+          <div class="name">Fingering Charts</div>
+          <div class="desc">Choose an instrument and written note. Get the standard fingering, position, and staff view.</div>
+        </div>
+        <div class="arrow">↗</div>
+      </a>
+
+      <a class="tool medium" href="https://jasonatkinson123-sketch.github.io/band-song-randomizer/" target="_blank" rel="noopener">
+        <div class="num">03 / CHOOSE</div>
+        <div>
+          <div class="name">Song Randomizer</div>
+          <div class="desc">Let the machine pick the next tune.</div>
+        </div>
+        <div class="arrow">↗</div>
+      </a>
+
+      <a class="tool medium" href="https://jasonatkinson123-sketch.github.io/derby-band-music-requests/" target="_blank" rel="noopener">
+        <div class="num">04 / REQUEST</div>
+        <div>
+          <div class="name">Music Requests</div>
+          <div class="desc">Student part and copy request station.</div>
+        </div>
+        <div class="arrow">↗</div>
+      </a>
+
+      <a class="tool medium" href="https://jasonatkinson123-sketch.github.io/derby-countdown/" target="_blank" rel="noopener">
+        <div class="num">05 / WHEN</div>
+        <div>
+          <div class="name">Countdown</div>
+          <div class="desc">Concerts, days off, PD, early dismissal, and the road ahead.</div>
+        </div>
+        <div class="arrow">↗</div>
+      </a>
+
+      <a class="tool small" href="https://jasonatkinson123-sketch.github.io/derby-character-cash/" target="_blank" rel="noopener">
+        <div class="num">06 / RECOGNIZE</div>
+        <div>
+          <div class="name">Derby Character Cash</div>
+          <div class="desc">Character Counts recognition, rewards, recent activity, and reports.</div>
+        </div>
+        <div class="arrow">↗</div>
+      </a>
+    </section>
+
+    <div class="footer">
+      <div><span class="dot"></span>DERBY BAND OS / v1</div>
+      <div>Open a tool. Do the thing. Come back here.</div>
+    </div>
+  </main>
+</body>
+</html>
