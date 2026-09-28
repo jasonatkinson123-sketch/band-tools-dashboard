@@ -363,15 +363,15 @@
     const doorChip = document.createElement("div");
     doorChip.id = "dbdoor-chip";
     doorChip.hidden = true;
-    doorChip.innerHTML = \`
+    doorChip.innerHTML = `
       <button id="dbdoor-open" type="button">STAND DOOR KEEPER</button>
       <button id="dbdoor-dismiss" type="button" aria-label="Dismiss Stand Door Keeper reminder">×</button>
-    \`;
+    `;
 
     const doorModal = document.createElement("div");
     doorModal.id = "dbdoor-modal";
     doorModal.hidden = true;
-    doorModal.innerHTML = \`
+    doorModal.innerHTML = `
       <section id="dbdoor-card" role="dialog" aria-modal="true" aria-labelledby="dbdoor-title">
         <button id="dbdoor-close" type="button" aria-label="Close Stand Door Keeper">×</button>
         <p id="dbdoor-eyebrow">DERBY BAND • CLASS JOB</p>
@@ -382,7 +382,7 @@
           <button id="dbdoor-submit" type="submit">ENTER</button>
         </form>
       </section>
-    \`;
+    `;
 
     const doorFireworks = document.createElement("div");
     doorFireworks.id = "dbdoor-fireworks";
@@ -439,7 +439,7 @@
   }
 
   function doorKey(today, mode, prompt) {
-    return prompt ? \`${today}|${mode}|${prompt.grade}|${prompt.end}\` : "";
+    return prompt ? `${today}|${mode}|${prompt.grade}|${prompt.end}` : "";
   }
 
   function readDoorState(today) {
@@ -488,7 +488,7 @@
 
     activeDoorPrompt = prompt;
     activeDoorPromptKey = key;
-    r.doorOpen.textContent = \`STAND DOOR KEEPER • ${prompt.grade}\`;
+    r.doorOpen.textContent = `STAND DOOR KEEPER • ${prompt.grade}`;
     r.doorChip.hidden = false;
   }
 
