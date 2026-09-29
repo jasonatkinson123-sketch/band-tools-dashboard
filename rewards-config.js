@@ -11,13 +11,11 @@ window.DERBY_REWARDS_CONFIG = {
     { id: "class-experience", name: "Class Experience Pass", description: "Help choose a future class experience.", price: 30, icon: "☀", active: true }
   ],
 
-  // Dedicated Character Cash Google Form goes here.
-  // The site will prefill Name, Grade, Reward, and Cost once these values are filled.
-  googleFormUrl: "",
+  googleFormUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfd9zYYmNVdJ7NrYSDiannupS_P2-kW0-87OY4yX3p-CfEJCA/viewform",
   googleFormFields: {
-    name: "",
-    grade: "",
-    reward: "",
-    cost: ""
+    name: "entry.1562034853",
+    grade: "entry.1930865252",
+    reward: "entry.480710405",
+    cost: "entry.252775878"
   }
 };
