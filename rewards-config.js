@@ -1,5 +1,5 @@
 window.DERBY_REWARDS_CONFIG = {
-  // Mirrors the current Derby Character Cash reward catalog.
+  // Mirrors the current Derby Character Points reward catalog.
   rewards: [
     { id: "choose-seat", name: "Choose Your Seat Pass", description: "Pick your seat for one class.", price: 12, icon: "▣", active: true },
     { id: "music-request", name: "Music Request Pass", description: "Choose a clean work-time song.", price: 15, icon: "♫", active: true },
