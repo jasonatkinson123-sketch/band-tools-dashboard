@@ -1,12 +1,34 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.09.28.3";
+  const VERSION = "2026.09.29.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
+  const CASH_STORAGE_KEY = "derby-character-cash-v1";
+  const CASH_MAP_STORAGE_KEY = "derby-character-cash-quick-map-v1";
   const COUNTDOWN_SECONDS = 5 * 60;
   const BELL_HOLD_SECONDS = 12;
+  const CASH_MAX_BONUS = 9;
+
+  const CASH_INSTRUMENTS = [
+    { id:"flute", label:"Flute", aliases:["flute","flutes"] },
+    { id:"oboe", label:"Oboe", aliases:["oboe","oboes"] },
+    { id:"bassoon", label:"Bassoon", aliases:["bassoon","bassoons"] },
+    { id:"clarinet", label:"Clarinet", aliases:["clarinet","clarinets"] },
+    { id:"bass-clarinet", label:"Bass Clarinet", aliases:["bass clarinet","bass clarinets"] },
+    { id:"alto-sax", label:"Alto Sax", aliases:["alto","altos","alto sax","alto saxes","alto saxophone","alto saxophones"] },
+    { id:"tenor-sax", label:"Tenor Sax", aliases:["tenor","tenors","tenor sax","tenor saxes","tenor saxophone","tenor saxophones"] },
+    { id:"baritone-sax", label:"Bari Sax", aliases:["bari","baris","bari sax","bari saxes","baritone sax","baritone saxes","baritone saxophone","baritone saxophones"] },
+    { id:"trumpet", label:"Trumpet", aliases:["trumpet","trumpets"] },
+    { id:"french-horn", label:"French Horn", aliases:["horn","horns","french horn","french horns"] },
+    { id:"trombone", label:"Trombone", aliases:["trombone","trombones"] },
+    { id:"euphonium", label:"Baritone / Euphonium", aliases:["baritone","baritones","euphonium","euphoniums","baritone euphonium","baritone / euphonium"] },
+    { id:"tuba", label:"Tuba", aliases:["tuba","tubas"] },
+    { id:"electric-bass", label:"Electric Bass", aliases:["bass","basses","bass guitar","bass guitars","electric bass","electric basses"] },
+    { id:"percussion", label:"Percussion", aliases:["percussion","drum","drums","drummer","drummers","drumsticks"] },
+    { id:"mallets-bells", label:"Mallets / Bells", aliases:["mallet","mallets","bell","bells","mallets bells","mallets / bells","glockenspiel"] }
+  ];
 
   // Dates already used by the Derby Countdown site.
   const EARLY_DATES = new Set([
@@ -86,6 +108,33 @@
       { grade: "6TH", at: "12:41", end: "13:31" },
       { grade: "8TH", at: "13:44", end: "14:13" },
       { grade: "7TH", at: "14:26", end: "14:55" }
+    ]
+  };
+
+  const CLASS_PERIODS = {
+    full: [
+      { grade:"6TH", start:"08:35", end:"09:33" },
+      { grade:"7TH", start:"09:36", end:"10:31" },
+      { grade:"8TH", start:"10:34", end:"11:29" },
+      { grade:"6TH", start:"11:32", end:"13:01" },
+      { grade:"8TH", start:"13:04", end:"13:58" },
+      { grade:"7TH", start:"14:01", end:"14:55" }
+    ],
+    early: [
+      { grade:"6TH", start:"08:35", end:"09:09" },
+      { grade:"7TH", start:"09:12", end:"09:43" },
+      { grade:"8TH", start:"09:46", end:"10:17" },
+      { grade:"6TH", start:"10:20", end:"10:47" },
+      { grade:"8TH", start:"10:50", end:"11:17" },
+      { grade:"7TH", start:"11:20", end:"12:25" }
+    ],
+    delay: [
+      { grade:"6TH", start:"10:21", end:"11:19" },
+      { grade:"7TH", start:"11:22", end:"11:58" },
+      { grade:"8TH", start:"12:01", end:"12:28" },
+      { grade:"6TH", start:"12:31", end:"13:31" },
+      { grade:"8TH", start:"13:34", end:"14:13" },
+      { grade:"7TH", start:"14:16", end:"14:55" }
     ]
   };
 
@@ -307,6 +356,58 @@
         78% { opacity:1; }
         100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); }
       }
+      #dbcash-chip, #dbcash-panel, #dbcash-panel * { box-sizing:border-box; }
+      #dbcash-chip {
+        position:fixed; z-index:2147483603; left:10px; bottom:max(10px, env(safe-area-inset-bottom));
+        width:68px; height:68px; padding:6px; appearance:none; border:3px solid #111;
+        background:#bdebd2; color:#111; cursor:pointer; box-shadow:5px 5px 0 #111;
+        font:950 11px/1.05 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing:.04em; text-transform:uppercase;
+      }
+      #dbcash-chip:hover, #dbcash-chip:focus-visible { outline:3px solid #6f4aa8; outline-offset:2px; }
+      #dbcash-panel {
+        position:fixed; z-index:2147483604; left:10px; bottom:max(92px, calc(env(safe-area-inset-bottom) + 92px));
+        width:min(330px, calc(100vw - 20px)); border:3px solid #111; background:#f6fff9; color:#111;
+        box-shadow:7px 7px 0 #111; padding:14px;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      #dbcash-panel[hidden] { display:none !important; }
+      #dbcash-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+      #dbcash-kicker { margin:0; font-size:10px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:#277652; }
+      #dbcash-title { margin:3px 0 0; font:950 22px/.95 ui-monospace, monospace; letter-spacing:-.04em; text-transform:uppercase; }
+      #dbcash-close { appearance:none; border:0; background:transparent; color:#111; cursor:pointer; font:900 22px/1 ui-monospace, monospace; padding:0 2px; }
+      #dbcash-grades { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin:12px 0 8px; }
+      #dbcash-grades button {
+        appearance:none; border:2px solid #111; background:#fff; color:#111; cursor:pointer; padding:7px 4px;
+        font:900 10px/1 ui-monospace, monospace;
+      }
+      #dbcash-grades button[aria-pressed="true"] { background:#111; color:#fff; }
+      #dbcash-class {
+        width:100%; border:2px solid #111; background:#fff; color:#111; padding:8px; margin:0 0 8px;
+        font:800 10px/1.2 ui-monospace, monospace;
+      }
+      #dbcash-form { display:flex; gap:6px; }
+      #dbcash-command {
+        min-width:0; flex:1; border:3px solid #111; background:#fff; color:#111; padding:10px;
+        font:900 15px/1 ui-monospace, monospace; outline:none;
+      }
+      #dbcash-command:focus { box-shadow:3px 3px 0 #6f4aa8; }
+      #dbcash-award {
+        appearance:none; border:3px solid #111; background:#111; color:#fff; cursor:pointer; padding:8px 10px;
+        font:900 10px/1 ui-monospace, monospace; letter-spacing:.04em;
+      }
+      #dbcash-help { margin:8px 0 0; font-size:9px; line-height:1.35; opacity:.7; }
+      #dbcash-feedback {
+        min-height:30px; margin:9px 0 0; padding:8px; border:2px solid rgba(17,17,17,.22);
+        background:#fff; font:850 10px/1.35 ui-monospace, monospace;
+      }
+      #dbcash-feedback.dbcash-error { background:#ffd9d4; border-color:#111; }
+      #dbcash-feedback.dbcash-success { background:#c9f4d9; border-color:#111; }
+      #dbcash-undo {
+        width:100%; margin-top:7px; appearance:none; border:2px solid #111; background:#fff; color:#111; cursor:pointer;
+        padding:7px; font:900 9px/1 ui-monospace, monospace; text-transform:uppercase;
+      }
+      #dbcash-undo[hidden] { display:none !important; }
       @media (max-width:600px) {
         #dbclock-box { left:10px; right:10px; top:10px; width:auto; }
         #dbclock-time { font-size:52px; }
@@ -389,7 +490,40 @@
     doorFireworks.hidden = true;
     doorFireworks.setAttribute("aria-hidden", "true");
 
-    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks);
+    const cashChip = document.createElement("button");
+    cashChip.id = "dbcash-chip";
+    cashChip.type = "button";
+    cashChip.setAttribute("aria-haspopup", "true");
+    cashChip.setAttribute("aria-expanded", "false");
+    cashChip.innerHTML = "CHARACTER<br>CASH";
+
+    const cashPanel = document.createElement("aside");
+    cashPanel.id = "dbcash-panel";
+    cashPanel.hidden = true;
+    cashPanel.innerHTML = `
+      <div id="dbcash-top">
+        <div>
+          <p id="dbcash-kicker">DERBY BAND • QUICK AWARD</p>
+          <h2 id="dbcash-title">CHARACTER CASH</h2>
+        </div>
+        <button id="dbcash-close" type="button" aria-label="Close Character Cash quick award">×</button>
+      </div>
+      <div id="dbcash-grades" aria-label="Band grade">
+        <button type="button" data-dbcash-grade="6TH">6TH</button>
+        <button type="button" data-dbcash-grade="7TH">7TH</button>
+        <button type="button" data-dbcash-grade="8TH">8TH</button>
+      </div>
+      <select id="dbcash-class" aria-label="Character Cash class"></select>
+      <form id="dbcash-form">
+        <input id="dbcash-command" type="text" autocomplete="off" maxlength="40" placeholder="flute +2" aria-label="Section and Character Cash amount" />
+        <button id="dbcash-award" type="submit">AWARD</button>
+      </form>
+      <p id="dbcash-help">TYPE A SECTION. “FLUTE” = +1. TRY “CLARINET +3”, “ALTO +2”, OR “PERCUSSION +4”.</p>
+      <div id="dbcash-feedback" aria-live="polite">READY.</div>
+      <button id="dbcash-undo" type="button" hidden>UNDO LAST AWARD</button>
+    `;
+
+    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, cashChip, cashPanel);
   }
 
   let dismissedSlotKey = "";
@@ -398,6 +532,8 @@
   let activeDoorPrompt = null;
   let activeDoorPromptKey = "";
   let doorPreviewMode = false;
+  let cashManualGrade = null;
+  let lastCashAward = null;
 
   function refs() {
     return {
@@ -423,7 +559,16 @@
       doorPrompt: document.getElementById("dbdoor-prompt"),
       doorForm: document.getElementById("dbdoor-form"),
       doorName: document.getElementById("dbdoor-name"),
-      doorFireworks: document.getElementById("dbdoor-fireworks")
+      doorFireworks: document.getElementById("dbdoor-fireworks"),
+      cashChip: document.getElementById("dbcash-chip"),
+      cashPanel: document.getElementById("dbcash-panel"),
+      cashTitle: document.getElementById("dbcash-title"),
+      cashClose: document.getElementById("dbcash-close"),
+      cashClass: document.getElementById("dbcash-class"),
+      cashForm: document.getElementById("dbcash-form"),
+      cashCommand: document.getElementById("dbcash-command"),
+      cashFeedback: document.getElementById("dbcash-feedback"),
+      cashUndo: document.getElementById("dbcash-undo")
     };
   }
 
@@ -568,6 +713,236 @@
     launchDoorFireworks();
   }
 
+  function currentBandGrade(today, weekday, requestedMode, secondsNow) {
+    if (isWeekend(weekday) || isClosed(today)) return null;
+    const actualMode = resolvedMode(today, requestedMode);
+    if (actualMode === "off") return null;
+    const period = (CLASS_PERIODS[actualMode] || []).find(item =>
+      secondsNow >= toSeconds(item.start) && secondsNow < toSeconds(item.end)
+    );
+    return period?.grade || null;
+  }
+
+  function readCashState() {
+    try {
+      const raw = localStorage.getItem(CASH_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.classes) || !Array.isArray(parsed.students) || !Array.isArray(parsed.events)) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  function readCashMap() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CASH_MAP_STORAGE_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveCashMap(map) {
+    try { localStorage.setItem(CASH_MAP_STORAGE_KEY, JSON.stringify(map)); } catch {}
+  }
+
+  function gradeFromClassName(name = "") {
+    const value = String(name).toLowerCase();
+    if (/\b6(?:th)?\b/.test(value) || /\bsixth\b/.test(value)) return "6TH";
+    if (/\b7(?:th)?\b/.test(value) || /\bseventh\b/.test(value)) return "7TH";
+    if (/\b8(?:th)?\b/.test(value) || /\beighth\b/.test(value)) return "8TH";
+    return null;
+  }
+
+  function activeCashClasses(state) {
+    return state?.classes?.filter(item => !item.archived) || [];
+  }
+
+  function cashClassForGrade(state, grade) {
+    if (!state || !grade) return null;
+    const classes = activeCashClasses(state);
+    const map = readCashMap();
+    const mapped = classes.find(item => item.id === map[grade]);
+    if (mapped) return mapped;
+    const matches = classes.filter(item => gradeFromClassName(item.name) === grade);
+    if (matches.length === 1) {
+      map[grade] = matches[0].id;
+      saveCashMap(map);
+      return matches[0];
+    }
+    return null;
+  }
+
+  function cleanInstrumentText(value) {
+    return String(value || "").trim().toLowerCase().replace(/[._-]+/g, " ").replace(/\s+/g, " ");
+  }
+
+  function cashInstrumentFromText(value) {
+    const cleaned = cleanInstrumentText(value);
+    if (!cleaned || cleaned === "sax" || cleaned === "saxes") return null;
+    return CASH_INSTRUMENTS.find(item => item.aliases.includes(cleaned)) || null;
+  }
+
+  function parseCashCommand(raw) {
+    let text = String(raw || "").trim().toLowerCase().replace(/\s+/g, " ");
+    if (!text) return { error:"TYPE A SECTION FIRST." };
+    const wordNumbers = { one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9 };
+    let amount = 1;
+    let section = text;
+    let match = text.match(/^(.*?)(?:\s*\+\s*(\d+))$/);
+    if (!match) match = text.match(/^(.*?)(?:\s+plus\s+(\d+|one|two|three|four|five|six|seven|eight|nine))$/);
+    if (match) {
+      section = match[1].trim();
+      amount = /^\d+$/.test(match[2]) ? Number(match[2]) : wordNumbers[match[2]];
+    }
+    if (!Number.isInteger(amount) || amount < 1 || amount > CASH_MAX_BONUS) {
+      return { error:`USE +1 THROUGH +${CASH_MAX_BONUS}.` };
+    }
+    const instrument = cashInstrumentFromText(section);
+    if (!instrument) {
+      return { error: section === "sax" || section === "saxes"
+        ? "USE ALTO SAX, TENOR SAX, OR BARI SAX."
+        : "SECTION NOT RECOGNIZED." };
+    }
+    return { instrument, amount };
+  }
+
+  function quickEventId() {
+    return "band-bonus-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function notifyCashUpdated() {
+    try { window.dispatchEvent(new CustomEvent("derby-character-cash-updated")); } catch {}
+  }
+
+  function setCashFeedback(message, type = "") {
+    const r = refs();
+    r.cashFeedback.textContent = message;
+    r.cashFeedback.classList.remove("dbcash-error", "dbcash-success");
+    if (type) r.cashFeedback.classList.add(`dbcash-${type}`);
+  }
+
+  function effectiveCashGrade() {
+    const now = nyNow();
+    const requested = readOverride(now.date);
+    return cashManualGrade || currentBandGrade(now.date, now.weekday, requested, now.seconds);
+  }
+
+  function renderCashContext() {
+    const r = refs();
+    if (!r.cashChip || !r.cashPanel) return;
+    const state = readCashState();
+    const grade = effectiveCashGrade();
+    r.cashChip.innerHTML = grade ? `CASH<br>${grade.replace("TH","")}` : "CHARACTER<br>CASH";
+    document.querySelectorAll("[data-dbcash-grade]").forEach(button => {
+      button.setAttribute("aria-pressed", String(button.dataset.dbcashGrade === grade));
+    });
+    r.cashTitle.textContent = grade ? `${grade} GRADE • CASH` : "CHARACTER CASH";
+
+    const classes = activeCashClasses(state);
+    const preferred = cashClassForGrade(state, grade);
+    const currentValue = r.cashClass.value;
+    r.cashClass.innerHTML = `<option value="">${state ? "CHOOSE CHARACTER CASH CLASS" : "OPEN CHARACTER CASH FIRST"}</option>` +
+      classes.map(item => `<option value="${String(item.id).replace(/"/g,"&quot;")}">${String(item.name).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))}</option>`).join("");
+    const desired = preferred?.id || (classes.some(item => item.id === currentValue) ? currentValue : "");
+    r.cashClass.value = desired;
+    r.cashClass.disabled = !state || !grade || !classes.length;
+    r.cashCommand.disabled = !state || !grade || !classes.length;
+    r.cashUndo.hidden = !lastCashAward;
+    if (!state) setCashFeedback("OPEN CHARACTER CASH ONCE ON THIS DEVICE, THEN COME BACK.", "error");
+    else if (!grade) setCashFeedback("NO BAND CLASS DETECTED. TAP 6TH, 7TH, OR 8TH.", "error");
+    else if (!classes.length) setCashFeedback("NO ACTIVE CHARACTER CASH CLASSES FOUND.", "error");
+    else if (!r.cashClass.value) setCashFeedback(`${grade} DETECTED. CHOOSE ITS CHARACTER CASH CLASS ONCE.`, "error");
+  }
+
+  function saveCashClassMapping() {
+    const r = refs();
+    const grade = effectiveCashGrade();
+    if (!grade || !r.cashClass.value) return;
+    const map = readCashMap();
+    map[grade] = r.cashClass.value;
+    saveCashMap(map);
+    setCashFeedback(`${grade} CLASS LINKED. TYPE A SECTION TO AWARD.`, "success");
+  }
+
+  function awardCashCommand() {
+    const r = refs();
+    const state = readCashState();
+    const grade = effectiveCashGrade();
+    if (!state) return setCashFeedback("OPEN CHARACTER CASH ONCE ON THIS DEVICE, THEN COME BACK.", "error");
+    if (!grade) return setCashFeedback("CHOOSE 6TH, 7TH, OR 8TH FIRST.", "error");
+    const classId = r.cashClass.value || cashClassForGrade(state, grade)?.id;
+    if (!classId) return setCashFeedback("CHOOSE THE CHARACTER CASH CLASS FIRST.", "error");
+    const parsed = parseCashCommand(r.cashCommand.value);
+    if (parsed.error) return setCashFeedback(parsed.error, "error");
+
+    const students = state.students.filter(student =>
+      student.classId === classId && !student.archived && student.instrumentId === parsed.instrument.id
+    );
+    if (!students.length) {
+      return setCashFeedback(`NO ${parsed.instrument.label.toUpperCase()} PLAYERS FOUND IN THIS CLASS.`, "error");
+    }
+
+    students.forEach(student => { student.balance = Number(student.balance || 0) + parsed.amount; });
+    const event = {
+      id: quickEventId(),
+      type: "band-bonus",
+      source: "band-tools-quick",
+      label: parsed.instrument.label,
+      instrumentId: parsed.instrument.id,
+      amount: parsed.amount,
+      studentIds: students.map(student => student.id),
+      classId,
+      createdAt: new Date().toISOString()
+    };
+    state.events.unshift(event);
+    try {
+      localStorage.setItem(CASH_STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      students.forEach(student => { student.balance -= parsed.amount; });
+      state.events = state.events.filter(item => item.id !== event.id);
+      return setCashFeedback("CHARACTER CASH COULD NOT BE SAVED.", "error");
+    }
+
+    lastCashAward = { eventId:event.id, amount:parsed.amount, studentIds:event.studentIds, label:parsed.instrument.label };
+    r.cashUndo.hidden = false;
+    r.cashCommand.value = "";
+    setCashFeedback(`✓ ${parsed.instrument.label.toUpperCase()} • ${students.length} ${students.length === 1 ? "STUDENT" : "STUDENTS"} • +${parsed.amount} EACH`, "success");
+    notifyCashUpdated();
+    window.setTimeout(() => r.cashCommand.focus(), 20);
+  }
+
+  function undoCashAward() {
+    const r = refs();
+    if (!lastCashAward) return;
+    const state = readCashState();
+    if (!state) return setCashFeedback("CHARACTER CASH DATA IS NOT AVAILABLE.", "error");
+    const event = state.events.find(item => item.id === lastCashAward.eventId);
+    if (!event) {
+      lastCashAward = null;
+      r.cashUndo.hidden = true;
+      return setCashFeedback("THAT AWARD WAS ALREADY CHANGED ELSEWHERE.", "error");
+    }
+    state.students.forEach(student => {
+      if (lastCashAward.studentIds.includes(student.id)) {
+        student.balance = Number(student.balance || 0) - lastCashAward.amount;
+      }
+    });
+    state.events = state.events.filter(item => item.id !== lastCashAward.eventId);
+    try {
+      localStorage.setItem(CASH_STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      return setCashFeedback("UNDO COULD NOT BE SAVED.", "error");
+    }
+    const label = lastCashAward.label;
+    lastCashAward = null;
+    r.cashUndo.hidden = true;
+    setCashFeedback(`UNDONE • ${label.toUpperCase()} AWARD REMOVED.`, "success");
+    notifyCashUpdated();
+  }
+
   function renderMenuState(today, requested) {
     document.querySelectorAll("[data-dbclock-mode]").forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.dbclockMode === requested));
@@ -609,6 +984,7 @@
     const schedule = scheduleFor(now.date, now.weekday, requested);
     renderMenuState(now.date, requested);
     renderDoorReminder(now.date, now.weekday, requested, actual, now.seconds);
+    if (!refs().cashPanel.hidden) renderCashContext();
 
     if (previewActive) {
       const elapsed = (Date.now() - previewStartedAt) / 1000;
@@ -701,8 +1077,44 @@
       event.preventDefault();
       celebrateDoorKeeper(r.doorName.value);
     });
+
+    r.cashChip.addEventListener("click", () => {
+      r.cashPanel.hidden = !r.cashPanel.hidden;
+      r.cashChip.setAttribute("aria-expanded", String(!r.cashPanel.hidden));
+      if (!r.cashPanel.hidden) {
+        renderCashContext();
+        window.setTimeout(() => r.cashCommand.focus(), 30);
+      } else {
+        cashManualGrade = null;
+      }
+    });
+    r.cashClose.addEventListener("click", () => {
+      r.cashPanel.hidden = true;
+      r.cashChip.setAttribute("aria-expanded", "false");
+      cashManualGrade = null;
+      renderCashContext();
+    });
+    document.querySelectorAll("[data-dbcash-grade]").forEach(button => {
+      button.addEventListener("click", () => {
+        cashManualGrade = button.dataset.dbcashGrade;
+        renderCashContext();
+        window.setTimeout(() => r.cashCommand.focus(), 20);
+      });
+    });
+    r.cashClass.addEventListener("change", saveCashClassMapping);
+    r.cashForm.addEventListener("submit", event => {
+      event.preventDefault();
+      awardCashCommand();
+    });
+    r.cashUndo.addEventListener("click", undoCashAward);
+
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && !r.doorModal.hidden) closeDoorKeeper(true);
+      else if (event.key === "Escape" && !r.cashPanel.hidden) {
+        r.cashPanel.hidden = true;
+        r.cashChip.setAttribute("aria-expanded", "false");
+        cashManualGrade = null;
+      }
     });
 
     document.addEventListener("click", event => {
@@ -713,9 +1125,10 @@
     });
 
     window.addEventListener("storage", event => {
-      if (event.key === STORAGE_KEY || event.key === DOOR_STORAGE_KEY || event.key === null) {
+      if (event.key === STORAGE_KEY || event.key === DOOR_STORAGE_KEY || event.key === CASH_STORAGE_KEY || event.key === CASH_MAP_STORAGE_KEY || event.key === null) {
         dismissedSlotKey = "";
         tick();
+        if (!r.cashPanel.hidden) renderCashContext();
       }
     });
 
@@ -730,6 +1143,7 @@
     buildUI();
     bind();
     tick();
+    renderCashContext();
     window.setInterval(tick, 250);
     window.DerbyBandClock = {
       version: VERSION,
