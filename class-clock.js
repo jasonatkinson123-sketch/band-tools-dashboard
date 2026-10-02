@@ -1,10 +1,11 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.09.29.1";
+  const VERSION = "2026.10.02.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
+  const FANCY_STORAGE_KEY = "derby-band-fancy-stands-v1";
   const CASH_STORAGE_KEY = "derby-character-cash-v1";
   const CASH_MAP_STORAGE_KEY = "derby-character-cash-quick-map-v1";
   const COUNTDOWN_SECONDS = 5 * 60;
@@ -356,6 +357,34 @@
         78% { opacity:1; }
         100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); }
       }
+      #dbfancy-chip, #dbfancy-panel, #dbfancy-panel * { box-sizing:border-box; }
+      #dbfancy-chip {
+        position:fixed; z-index:2147483603; right:10px; bottom:max(145px, calc(env(safe-area-inset-bottom) + 145px));
+        width:82px; min-height:62px; padding:7px; appearance:none; border:3px solid #111;
+        background:#d9c6ff; color:#111; cursor:pointer; box-shadow:5px 5px 0 #111;
+        font:950 10px/1.08 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing:.04em; text-transform:uppercase;
+      }
+      #dbfancy-chip:hover, #dbfancy-chip:focus-visible { outline:3px solid #f3df68; outline-offset:2px; }
+      #dbfancy-panel {
+        position:fixed; z-index:2147483637; inset:0; display:grid; place-items:center; padding:20px;
+        background:rgba(17,17,17,.38); backdrop-filter:blur(2px);
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      #dbfancy-panel[hidden] { display:none !important; }
+      #dbfancy-card { position:relative; width:min(620px,calc(100vw - 28px)); padding:22px; border:4px solid #111; background:#fffdf7; color:#111; box-shadow:12px 12px 0 #6f4aa8; }
+      #dbfancy-close { position:absolute; right:10px; top:8px; border:0; background:transparent; cursor:pointer; font:900 27px/1 ui-monospace,monospace; }
+      #dbfancy-kicker { margin:0 42px 7px 0; font-size:10px; font-weight:900; letter-spacing:.13em; color:#6f4aa8; }
+      #dbfancy-title { margin:0; font:950 clamp(30px,7vw,54px)/.95 ui-monospace,monospace; letter-spacing:-.05em; }
+      #dbfancy-grades { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:15px 0 10px; }
+      #dbfancy-grades button, #dbfancy-pick, #dbfancy-reset { appearance:none; border:3px solid #111; background:#fff; color:#111; cursor:pointer; padding:9px; font:900 10px/1 ui-monospace,monospace; }
+      #dbfancy-grades button[aria-pressed="true"] { background:#111; color:#fff; }
+      #dbfancy-pick { width:100%; background:#f3df68; font-size:12px; }
+      #dbfancy-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+      .dbfancy-slot { min-height:58px; display:flex; align-items:center; gap:8px; border:3px solid #111; background:#efe7ff; padding:9px; font:950 16px/1.05 ui-monospace,monospace; }
+      .dbfancy-slot span { opacity:.55; font-size:11px; }
+      #dbfancy-note { min-height:28px; margin:8px 0; font:850 10px/1.35 ui-monospace,monospace; }
+      #dbfancy-reset { width:100%; border-width:2px; font-size:9px; }
       #dbcash-chip, #dbcash-panel, #dbcash-panel * { box-sizing:border-box; }
       #dbcash-chip {
         position:fixed; z-index:2147483603; left:10px; bottom:max(10px, env(safe-area-inset-bottom));
@@ -490,6 +519,37 @@
     doorFireworks.hidden = true;
     doorFireworks.setAttribute("aria-hidden", "true");
 
+    const fancyChip = document.createElement("button");
+    fancyChip.id = "dbfancy-chip";
+    fancyChip.type = "button";
+    fancyChip.setAttribute("aria-haspopup", "true");
+    fancyChip.textContent = "FANCY STANDS";
+
+    const fancyPanel = document.createElement("div");
+    fancyPanel.id = "dbfancy-panel";
+    fancyPanel.hidden = true;
+    fancyPanel.innerHTML = `
+      <section id="dbfancy-card" role="dialog" aria-modal="true" aria-labelledby="dbfancy-title">
+        <button id="dbfancy-close" type="button" aria-label="Close Fancy Stands">×</button>
+        <p id="dbfancy-kicker">DERBY BAND • DAILY PERK</p>
+        <h2 id="dbfancy-title">FANCY STANDS</h2>
+        <div id="dbfancy-grades" aria-label="Band grade">
+          <button type="button" data-dbfancy-grade="6TH">6TH</button>
+          <button type="button" data-dbfancy-grade="7TH">7TH</button>
+          <button type="button" data-dbfancy-grade="8TH">8TH</button>
+        </div>
+        <button id="dbfancy-pick" type="button">🎲 PICK 4</button>
+        <div id="dbfancy-list" aria-live="polite">
+          <div class="dbfancy-slot"><span>1</span><b>—</b></div>
+          <div class="dbfancy-slot"><span>2</span><b>—</b></div>
+          <div class="dbfancy-slot"><span>3</span><b>—</b></div>
+          <div class="dbfancy-slot"><span>4</span><b>—</b></div>
+        </div>
+        <p id="dbfancy-note">PICK FOUR STUDENTS FROM THE CURRENT BAND.</p>
+        <button id="dbfancy-reset" type="button">RESET ROTATION FOR THIS GRADE</button>
+      </section>
+    `;
+
     const cashChip = document.createElement("button");
     cashChip.id = "dbcash-chip";
     cashChip.type = "button";
@@ -523,7 +583,7 @@
       <button id="dbcash-undo" type="button" hidden>UNDO LAST AWARD</button>
     `;
 
-    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, cashChip, cashPanel);
+    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, fancyChip, fancyPanel, cashChip, cashPanel);
   }
 
   let dismissedSlotKey = "";
@@ -533,6 +593,7 @@
   let activeDoorPromptKey = "";
   let doorPreviewMode = false;
   let cashManualGrade = null;
+  let fancyManualGrade = null;
   let lastCashAward = null;
 
   function refs() {
@@ -560,6 +621,13 @@
       doorForm: document.getElementById("dbdoor-form"),
       doorName: document.getElementById("dbdoor-name"),
       doorFireworks: document.getElementById("dbdoor-fireworks"),
+      fancyChip: document.getElementById("dbfancy-chip"),
+      fancyPanel: document.getElementById("dbfancy-panel"),
+      fancyClose: document.getElementById("dbfancy-close"),
+      fancyPick: document.getElementById("dbfancy-pick"),
+      fancyList: document.getElementById("dbfancy-list"),
+      fancyNote: document.getElementById("dbfancy-note"),
+      fancyReset: document.getElementById("dbfancy-reset"),
       cashChip: document.getElementById("dbcash-chip"),
       cashPanel: document.getElementById("dbcash-panel"),
       cashTitle: document.getElementById("dbcash-title"),
@@ -830,6 +898,80 @@
     return cashManualGrade || currentBandGrade(now.date, now.weekday, requested, now.seconds);
   }
 
+  function readFancyState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(FANCY_STORAGE_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch { return {}; }
+  }
+
+  function saveFancyState(state) {
+    try { localStorage.setItem(FANCY_STORAGE_KEY, JSON.stringify(state)); } catch {}
+  }
+
+  function effectiveFancyGrade() {
+    const now = nyNow();
+    const requested = readOverride(now.date);
+    return fancyManualGrade || currentBandGrade(now.date, now.weekday, requested, now.seconds);
+  }
+
+  function fancyRoster(grade) {
+    const state = readCashState();
+    const cls = cashClassForGrade(state, grade);
+    if (!state || !cls) return [];
+    return state.students.filter(student => student.classId === cls.id && !student.archived)
+      .map(student => ({ id:String(student.id), name:String(student.name || student.displayName || student.firstName || "STUDENT") }));
+  }
+
+  function renderFancy() {
+    const r = refs();
+    const grade = effectiveFancyGrade();
+    document.querySelectorAll("[data-dbfancy-grade]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.dbfancyGrade === grade)));
+    const state = readFancyState();
+    const picks = grade && state[grade]?.current || [];
+    const slots = [0,1,2,3].map(i => `<div class="dbfancy-slot"><span>${i+1}</span><b>${picks[i]?.name ? picks[i].name.replace(/[&<>]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[ch])) : "—"}</b></div>`).join("");
+    r.fancyList.innerHTML = slots;
+    const roster = fancyRoster(grade);
+    if (!grade) r.fancyNote.textContent = "NO BAND DETECTED. CHOOSE 6TH, 7TH, OR 8TH.";
+    else if (!roster.length) r.fancyNote.textContent = "OPEN CHARACTER POINTS ONCE ON THIS DEVICE SO I CAN SEE THE ROSTER.";
+    else r.fancyNote.textContent = `${grade} GRADE • ${roster.length} STUDENTS • STUDENTS WHO HAVE NOT HAD A FANCY STAND ARE PRIORITIZED.`;
+    r.fancyPick.disabled = !grade || roster.length < 4;
+  }
+
+  function pickFancyFour() {
+    const r = refs();
+    const grade = effectiveFancyGrade();
+    const roster = fancyRoster(grade);
+    if (!grade || roster.length < 4) return renderFancy();
+    const state = readFancyState();
+    const gradeState = state[grade] || { used:[], current:[] };
+    let unused = roster.filter(student => !gradeState.used.includes(student.id));
+    if (unused.length < 4) {
+      gradeState.used = [];
+      unused = roster.slice();
+    }
+    for (let i=unused.length-1;i>0;i--) {
+      const j=Math.floor(Math.random()*(i+1));
+      [unused[i],unused[j]]=[unused[j],unused[i]];
+    }
+    const picks = unused.slice(0,4);
+    gradeState.current = picks;
+    gradeState.used = [...new Set([...gradeState.used, ...picks.map(item=>item.id)])];
+    state[grade] = gradeState;
+    saveFancyState(state);
+    renderFancy();
+    launchDoorFireworks();
+  }
+
+  function resetFancyRotation() {
+    const grade = effectiveFancyGrade();
+    if (!grade) return;
+    const state = readFancyState();
+    state[grade] = { used:[], current:[] };
+    saveFancyState(state);
+    renderFancy();
+  }
+
   function renderCashContext() {
     const r = refs();
     if (!r.cashChip || !r.cashPanel) return;
@@ -1078,6 +1220,29 @@
       celebrateDoorKeeper(r.doorName.value);
     });
 
+    r.fancyChip.addEventListener("click", () => {
+      r.fancyPanel.hidden = false;
+      renderFancy();
+    });
+    r.fancyClose.addEventListener("click", () => {
+      r.fancyPanel.hidden = true;
+      fancyManualGrade = null;
+    });
+    r.fancyPanel.addEventListener("click", event => {
+      if (event.target === r.fancyPanel) {
+        r.fancyPanel.hidden = true;
+        fancyManualGrade = null;
+      }
+    });
+    document.querySelectorAll("[data-dbfancy-grade]").forEach(button => {
+      button.addEventListener("click", () => {
+        fancyManualGrade = button.dataset.dbfancyGrade;
+        renderFancy();
+      });
+    });
+    r.fancyPick.addEventListener("click", pickFancyFour);
+    r.fancyReset.addEventListener("click", resetFancyRotation);
+
     r.cashChip.addEventListener("click", () => {
       r.cashPanel.hidden = !r.cashPanel.hidden;
       r.cashChip.setAttribute("aria-expanded", String(!r.cashPanel.hidden));
@@ -1110,6 +1275,10 @@
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && !r.doorModal.hidden) closeDoorKeeper(true);
+      else if (event.key === "Escape" && !r.fancyPanel.hidden) {
+        r.fancyPanel.hidden = true;
+        fancyManualGrade = null;
+      }
       else if (event.key === "Escape" && !r.cashPanel.hidden) {
         r.cashPanel.hidden = true;
         r.cashChip.setAttribute("aria-expanded", "false");
@@ -1125,7 +1294,7 @@
     });
 
     window.addEventListener("storage", event => {
-      if (event.key === STORAGE_KEY || event.key === DOOR_STORAGE_KEY || event.key === CASH_STORAGE_KEY || event.key === CASH_MAP_STORAGE_KEY || event.key === null) {
+      if (event.key === STORAGE_KEY || event.key === DOOR_STORAGE_KEY || event.key === FANCY_STORAGE_KEY || event.key === CASH_STORAGE_KEY || event.key === CASH_MAP_STORAGE_KEY || event.key === null) {
         dismissedSlotKey = "";
         tick();
         if (!r.cashPanel.hidden) renderCashContext();
@@ -1144,6 +1313,7 @@
     bind();
     tick();
     renderCashContext();
+    renderFancy();
     window.setInterval(tick, 250);
     window.DerbyBandClock = {
       version: VERSION,
