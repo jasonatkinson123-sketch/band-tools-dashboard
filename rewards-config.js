@@ -13,5 +13,12 @@ window.DERBY_REWARDS_CONFIG = {
     grade: "entry.1930865252",
     reward: "entry.480710405",
     cost: "entry.252775878"
-  }
+  },
+
+  // Optional teacher-only dashboard notification feed.
+  // Point this at a count-only JSON/CSV/text endpoint (for example a published
+  // Google Sheet tab containing only the total number of reward submissions).
+  // No student names need to be published for the rehearsal-board badge.
+  requestCountUrl: "",
+  requestManageUrl: ""
 };
