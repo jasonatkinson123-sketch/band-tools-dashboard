@@ -1413,7 +1413,9 @@
     tick();
     renderCashContext();
     renderFancy();
+    pollRewardRequests();
     window.setInterval(tick, 250);
+    window.setInterval(pollRewardRequests, REQUEST_POLL_MS);
     window.DerbyBandClock = {
       version: VERSION,
       preview() {
