@@ -1,13 +1,15 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.02.1";
+  const VERSION = "2026.10.05.2";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
   const FANCY_STORAGE_KEY = "derby-band-fancy-stands-v1";
   const CASH_STORAGE_KEY = "derby-character-cash-v1";
   const CASH_MAP_STORAGE_KEY = "derby-character-cash-quick-map-v1";
+  const REQUEST_SEEN_STORAGE_KEY = "derby-reward-requests-seen-v1";
+  const REQUEST_POLL_MS = 60 * 1000;
   const COUNTDOWN_SECONDS = 5 * 60;
   const BELL_HOLD_SECONDS = 12;
   const CASH_MAX_BONUS = 9;
@@ -437,6 +439,15 @@
         padding:7px; font:900 9px/1 ui-monospace, monospace; text-transform:uppercase;
       }
       #dbcash-undo[hidden] { display:none !important; }
+      #dbrequest-chip {
+        position:fixed; z-index:2147483604; left:10px; bottom:max(82px, calc(env(safe-area-inset-bottom) + 82px));
+        max-width:min(250px,calc(100vw - 20px)); appearance:none; border:3px solid #111; background:#fff; color:#111;
+        box-shadow:5px 5px 0 #111; padding:9px 11px; cursor:pointer;
+        font:950 10px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing:.04em; text-transform:uppercase;
+      }
+      #dbrequest-chip[hidden] { display:none !important; }
+      #dbrequest-chip.dbrequest-new { background:#ffcf5a; animation:dbdoor-pulse .72s steps(2,end) 5; }
+      #dbrequest-chip:focus-visible, #dbrequest-chip:hover { outline:3px solid #6f4aa8; outline-offset:2px; }
       @media (max-width:600px) {
         #dbclock-box { left:10px; right:10px; top:10px; width:auto; }
         #dbclock-time { font-size:52px; }
@@ -557,6 +568,12 @@
     cashChip.setAttribute("aria-expanded", "false");
     cashChip.innerHTML = "CHARACTER<br>CASH";
 
+    const requestChip = document.createElement("button");
+    requestChip.id = "dbrequest-chip";
+    requestChip.type = "button";
+    requestChip.hidden = true;
+    requestChip.textContent = "REWARD REQUESTS";
+
     const cashPanel = document.createElement("aside");
     cashPanel.id = "dbcash-panel";
     cashPanel.hidden = true;
@@ -583,7 +600,7 @@
       <button id="dbcash-undo" type="button" hidden>UNDO LAST AWARD</button>
     `;
 
-    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, fancyChip, fancyPanel, cashChip, cashPanel);
+    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, fancyChip, fancyPanel, cashChip, cashPanel, requestChip);
   }
 
   let dismissedSlotKey = "";
@@ -636,7 +653,8 @@
       cashForm: document.getElementById("dbcash-form"),
       cashCommand: document.getElementById("dbcash-command"),
       cashFeedback: document.getElementById("dbcash-feedback"),
-      cashUndo: document.getElementById("dbcash-undo")
+      cashUndo: document.getElementById("dbcash-undo"),
+      requestChip: document.getElementById("dbrequest-chip")
     };
   }
 
@@ -1085,6 +1103,86 @@
     notifyCashUpdated();
   }
 
+  function rewardRequestConfig() {
+    return window.DERBY_REWARDS_CONFIG || {};
+  }
+
+  function readSeenRewardRequestCount() {
+    try {
+      const value = Number(localStorage.getItem(REQUEST_SEEN_STORAGE_KEY));
+      return Number.isFinite(value) && value >= 0 ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveSeenRewardRequestCount(value) {
+    try { localStorage.setItem(REQUEST_SEEN_STORAGE_KEY, String(value)); } catch {}
+  }
+
+  function parseRewardRequestCount(text, contentType = "") {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return null;
+    if (/json/i.test(contentType) || /^[\[{]/.test(trimmed)) {
+      try {
+        const data = JSON.parse(trimmed);
+        const candidates = [data?.pendingCount, data?.pending, data?.count, data?.total, data?.requests];
+        const value = candidates.map(Number).find(Number.isFinite);
+        if (Number.isFinite(value)) return Math.max(0, Math.floor(value));
+      } catch {}
+    }
+    const match = trimmed.match(/-?\d+/);
+    if (!match) return null;
+    const value = Number(match[0]);
+    return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+  }
+
+  let latestRewardRequestCount = null;
+
+  async function pollRewardRequests() {
+    const r = refs();
+    if (!r.requestChip) return;
+    const cfg = rewardRequestConfig();
+    const url = String(cfg.requestCountUrl || "").trim();
+    if (!url) {
+      r.requestChip.hidden = true;
+      return;
+    }
+    try {
+      const response = await fetch(url + (url.includes("?") ? "&" : "?") + "_=" + Date.now(), { cache:"no-store" });
+      if (!response.ok) throw new Error("request feed unavailable");
+      const count = parseRewardRequestCount(await response.text(), response.headers.get("content-type") || "");
+      if (!Number.isFinite(count)) throw new Error("request count missing");
+      latestRewardRequestCount = count;
+      let seen = readSeenRewardRequestCount();
+      if (seen === null) {
+        seen = count;
+        saveSeenRewardRequestCount(count);
+      }
+      const fresh = Math.max(0, count - seen);
+      r.requestChip.hidden = false;
+      r.requestChip.classList.toggle("dbrequest-new", fresh > 0);
+      r.requestChip.textContent = fresh > 0 ? `REWARD REQUESTS • ${fresh} NEW` : "REWARD REQUESTS";
+      r.requestChip.setAttribute("aria-label", fresh > 0 ? `${fresh} new reward request${fresh === 1 ? "" : "s"}` : "Reward requests");
+    } catch {
+      r.requestChip.hidden = true;
+    }
+  }
+
+  function openRewardRequests() {
+    const cfg = rewardRequestConfig();
+    if (Number.isFinite(latestRewardRequestCount)) {
+      saveSeenRewardRequestCount(latestRewardRequestCount);
+    }
+    const r = refs();
+    if (r.requestChip) {
+      r.requestChip.classList.remove("dbrequest-new");
+      r.requestChip.textContent = "REWARD REQUESTS";
+    }
+    const target = String(cfg.requestManageUrl || "").trim();
+    if (target) window.open(target, "_blank", "noopener");
+  }
+
   function renderMenuState(today, requested) {
     document.querySelectorAll("[data-dbclock-mode]").forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.dbclockMode === requested));
@@ -1272,6 +1370,7 @@
       awardCashCommand();
     });
     r.cashUndo.addEventListener("click", undoCashAward);
+    r.requestChip?.addEventListener("click", openRewardRequests);
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && !r.doorModal.hidden) closeDoorKeeper(true);
