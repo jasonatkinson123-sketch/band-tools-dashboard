@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.05.2";
+  const VERSION = "2026.10.06.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -1107,78 +1107,73 @@
     return window.DERBY_REWARDS_CONFIG || {};
   }
 
-  function readSeenRewardRequestCount() {
+  let latestRewardRequestFeed = null;
+
+  function normalizeRewardRequestFeed(text) {
     try {
-      const value = Number(localStorage.getItem(REQUEST_SEEN_STORAGE_KEY));
-      return Number.isFinite(value) && value >= 0 ? value : null;
+      const data = JSON.parse(String(text || "").trim());
+      const grades = data && typeof data.grades === "object" ? data.grades : {};
+      return {
+        targetDate: String(data?.targetDate || ""),
+        grades: {
+          "6TH": Math.max(0, Math.floor(Number(grades["6TH"] || 0))),
+          "7TH": Math.max(0, Math.floor(Number(grades["7TH"] || 0))),
+          "8TH": Math.max(0, Math.floor(Number(grades["8TH"] || 0)))
+        }
+      };
     } catch {
       return null;
     }
   }
 
-  function saveSeenRewardRequestCount(value) {
-    try { localStorage.setItem(REQUEST_SEEN_STORAGE_KEY, String(value)); } catch {}
-  }
-
-  function parseRewardRequestCount(text, contentType = "") {
-    const trimmed = String(text || "").trim();
-    if (!trimmed) return null;
-    if (/json/i.test(contentType) || /^[\[{]/.test(trimmed)) {
-      try {
-        const data = JSON.parse(trimmed);
-        const candidates = [data?.pendingCount, data?.pending, data?.count, data?.total, data?.requests];
-        const value = candidates.map(Number).find(Number.isFinite);
-        if (Number.isFinite(value)) return Math.max(0, Math.floor(value));
-      } catch {}
+  function renderRewardRequestChip() {
+    const r = refs();
+    if (!r.requestChip || !latestRewardRequestFeed) {
+      if (r.requestChip) r.requestChip.hidden = true;
+      return;
     }
-    const match = trimmed.match(/-?\d+/);
-    if (!match) return null;
-    const value = Number(match[0]);
-    return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+    const now = nyNow();
+    if (latestRewardRequestFeed.targetDate !== now.date) {
+      r.requestChip.hidden = true;
+      return;
+    }
+    const requested = readOverride(now.date);
+    const grade = currentBandGrade(now.date, now.weekday, requested, now.seconds);
+    const count = grade ? Number(latestRewardRequestFeed.grades?.[grade] || 0) : 0;
+    if (!grade || count < 1) {
+      r.requestChip.hidden = true;
+      return;
+    }
+    r.requestChip.hidden = false;
+    r.requestChip.classList.add("dbrequest-new");
+    r.requestChip.textContent = `${grade} • ${count} REWARD REQUEST${count === 1 ? "" : "S"} • REVIEW / REDEEM`;
   }
-
-  let latestRewardRequestCount = null;
 
   async function pollRewardRequests() {
     const r = refs();
     if (!r.requestChip) return;
     const cfg = rewardRequestConfig();
-    const url = String(cfg.requestCountUrl || "").trim();
+    const url = String(cfg.requestFeedUrl || cfg.requestCountUrl || "").trim();
     if (!url) {
+      latestRewardRequestFeed = null;
       r.requestChip.hidden = true;
       return;
     }
     try {
       const response = await fetch(url + (url.includes("?") ? "&" : "?") + "_=" + Date.now(), { cache:"no-store" });
       if (!response.ok) throw new Error("request feed unavailable");
-      const count = parseRewardRequestCount(await response.text(), response.headers.get("content-type") || "");
-      if (!Number.isFinite(count)) throw new Error("request count missing");
-      latestRewardRequestCount = count;
-      let seen = readSeenRewardRequestCount();
-      if (seen === null) {
-        seen = count;
-        saveSeenRewardRequestCount(count);
-      }
-      const fresh = Math.max(0, count - seen);
-      r.requestChip.hidden = false;
-      r.requestChip.classList.toggle("dbrequest-new", fresh > 0);
-      r.requestChip.textContent = fresh > 0 ? `REWARD REQUESTS • ${fresh} NEW` : "REWARD REQUESTS";
-      r.requestChip.setAttribute("aria-label", fresh > 0 ? `${fresh} new reward request${fresh === 1 ? "" : "s"}` : "Reward requests");
+      const feed = normalizeRewardRequestFeed(await response.text());
+      if (!feed) throw new Error("request feed invalid");
+      latestRewardRequestFeed = feed;
+      renderRewardRequestChip();
     } catch {
+      latestRewardRequestFeed = null;
       r.requestChip.hidden = true;
     }
   }
 
   function openRewardRequests() {
     const cfg = rewardRequestConfig();
-    if (Number.isFinite(latestRewardRequestCount)) {
-      saveSeenRewardRequestCount(latestRewardRequestCount);
-    }
-    const r = refs();
-    if (r.requestChip) {
-      r.requestChip.classList.remove("dbrequest-new");
-      r.requestChip.textContent = "REWARD REQUESTS";
-    }
     const target = String(cfg.requestManageUrl || "").trim();
     if (target) window.open(target, "_blank", "noopener");
   }
@@ -1224,6 +1219,7 @@
     const schedule = scheduleFor(now.date, now.weekday, requested);
     renderMenuState(now.date, requested);
     renderDoorReminder(now.date, now.weekday, requested, actual, now.seconds);
+    renderRewardRequestChip();
     if (!refs().cashPanel.hidden) renderCashContext();
 
     if (previewActive) {
