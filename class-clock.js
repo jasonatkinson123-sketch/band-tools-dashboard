@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.06.1";
+  const VERSION = "2026.10.06.2";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -261,6 +261,26 @@
         transition:opacity .18s ease, transform .18s ease, background .18s ease;
       }
       #dbclock-box.dbclock-show { opacity:1; transform:none; pointer-events:auto; }
+      body.dbclock-three-minute-pulse::after {
+        content:"";
+        position:fixed;
+        inset:0;
+        z-index:90;
+        pointer-events:none;
+        background:rgba(255,235,165,.018);
+        box-shadow:inset 0 0 0 0 rgba(255,218,92,0);
+        animation:dbclock-attention-pulse 3.2s ease-in-out infinite;
+      }
+      @keyframes dbclock-attention-pulse {
+        0%,100% {
+          background:rgba(255,235,165,.012);
+          box-shadow:inset 0 0 36px rgba(255,218,92,.03);
+        }
+        50% {
+          background:rgba(255,235,165,.055);
+          box-shadow:inset 0 0 105px rgba(255,218,92,.16);
+        }
+      }
       #dbclock-box.dbclock-last-minute { background:#ff9b8f; }
       #dbclock-box.dbclock-bell { background:#a9f6bc; }
       #dbclock-topline { display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -454,7 +474,8 @@
       }
       @media (prefers-reduced-motion:reduce) {
         #dbclock-box { transition:none; }
-        #dbdoor-chip, .dbdoor-spark { animation:none !important; }
+        #dbdoor-chip, .dbdoor-spark, body.dbclock-three-minute-pulse::after { animation:none !important; }
+        body.dbclock-three-minute-pulse::after { background:rgba(255,235,165,.035); box-shadow:inset 0 0 80px rgba(255,218,92,.10); }
       }
     `;
     document.head.appendChild(style);
@@ -1194,6 +1215,7 @@
     r.box.classList.add("dbclock-show");
     r.box.classList.toggle("dbclock-last-minute", lastMinute);
     r.box.classList.toggle("dbclock-bell", bell);
+    document.body.classList.toggle("dbclock-three-minute-pulse", remaining > 0 && remaining <= 3 * 60);
 
     const suffix = slot.note ? ` • ${slot.note}` : "";
     r.kicker.textContent = bell
@@ -1210,6 +1232,7 @@
   function hideCountdown() {
     const r = refs();
     r.box.classList.remove("dbclock-show", "dbclock-last-minute", "dbclock-bell");
+    document.body.classList.remove("dbclock-three-minute-pulse");
   }
 
   function tick() {
