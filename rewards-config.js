@@ -19,6 +19,6 @@ window.DERBY_REWARDS_CONFIG = {
   // Point this at a count-only JSON/CSV/text endpoint (for example a published
   // Google Sheet tab containing only the total number of reward submissions).
   // No student names need to be published for the rehearsal-board badge.
-  requestCountUrl: "",
-  requestManageUrl: ""
+  requestFeedUrl: "https://jasonatkinson123-sketch.github.io/band-tools-dashboard/reward-requests.json",
+  requestManageUrl: "https://jasonatkinson123-sketch.github.io/derby-character-cash/?view=rewards"
 };
