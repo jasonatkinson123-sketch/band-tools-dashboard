@@ -75,7 +75,7 @@
   function remainText(r){r=Math.max(0,Math.ceil(r));return String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0');}
 
   function compact(l,t,g,d){box.className='box';label.textContent=l;time.textContent=t;grade.textContent=g;detail.textContent=d;}
-  function countdown(e,r,isTest){box.className='box counting'+(r<=60?' urgent':'');pack.textContent=isTest?'BELL TEST':(e.label==='LUNCH BREAK'?'WRAP FOR LUNCH':'PACK UP');cgrade.textContent=isTest?'PREVIEW':e.grade+' GRADE';count.textContent=remainText(r);sub.textContent=isTest?'PREVIEWING THE FIVE-MINUTE COUNTDOWN':e.label+' ENDS AT '+showTime(e.time);fill.style.transform='scaleX('+Math.max(0,Math.min(1,r/FIVE))+')';}
+  function countdown(e,r,isTest){const windowSeconds=isTest?FIVE:(e.label==='LUNCH BREAK'?120:FIVE);box.className='box counting'+(r<=60?' urgent':'');pack.textContent=isTest?'BELL TEST':(e.label==='LUNCH BREAK'?'WRAP FOR LUNCH':'PACK UP');cgrade.textContent=isTest?'PREVIEW':e.grade+' GRADE';count.textContent=remainText(r);sub.textContent=isTest?'PREVIEWING THE FIVE-MINUTE COUNTDOWN':e.label+' ENDS AT '+showTime(e.time);fill.style.transform='scaleX('+Math.max(0,Math.min(1,r/windowSeconds))+')';}
   function ringing(e){box.className='box counting urgent ring';pack.textContent=e.label==='LUNCH BREAK'?'LUNCH':'TIME';cgrade.textContent=e.grade+' GRADE';count.textContent=e.label==='LUNCH BREAK'?'LUNCH':'PACK UP';sub.textContent=e.label+' · '+showTime(e.time);fill.style.transform='scaleX(0)';}
 
   function render(){
@@ -86,7 +86,8 @@
     const e=nextEvent(list,sec(p));
     if(!e){compact('BAND DAY COMPLETE','DONE','',resolved.m==='early'?'EARLY DISMISSAL':resolved.m==='delay'?'2-HOUR DELAY':'FULL DAY');return;}
     const r=e.t-sec(p);
-    if(r<=0&&r>-HOLD)ringing(e);else if(r>0&&r<=FIVE)countdown(e,r,false);else compact('NEXT BAND BELL',showTime(e.time),e.grade,(resolved.m==='early'?'EARLY DISMISSAL':resolved.m==='delay'?'2-HOUR DELAY':'FULL DAY')+' · '+e.label);
+    const windowSeconds=e.label==='LUNCH BREAK'?120:FIVE;
+    if(r<=0&&r>-HOLD)ringing(e);else if(r>0&&r<=windowSeconds)countdown(e,r,false);else compact('NEXT BAND BELL',showTime(e.time),e.grade,(resolved.m==='early'?'EARLY DISMISSAL':resolved.m==='delay'?'2-HOUR DELAY':'FULL DAY')+' · '+e.label);
   }
 
   mode.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');});
