@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.06.2";
+  const VERSION = "2026.10.07.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -68,11 +68,12 @@
       { grade: "7TH", end: "14:55" }
     ],
     early: [
-      { grade: "6TH", end: "09:09" },
-      { grade: "7TH", end: "09:43" },
-      { grade: "8TH", end: "10:17" },
-      { grade: "6TH", end: "10:47" },
-      { grade: "8TH", end: "11:17" },
+      { grade: "6TH", end: "09:01" },
+      { grade: "7TH", end: "09:29" },
+      { grade: "8TH", end: "09:57" },
+      { grade: "6TH", end: "10:29", note: "LUNCH", countdownSeconds: 2 * 60 },
+      { grade: "6TH", end: "11:29" },
+      { grade: "8TH", end: "11:57" },
       { grade: "7TH", end: "12:25" }
     ],
     delay: [
@@ -97,12 +98,12 @@
       { grade: "7TH", at: "14:11", end: "14:55" }
     ],
     early: [
-      { grade: "6TH", at: "08:45", end: "09:09" },
-      { grade: "7TH", at: "09:22", end: "09:43" },
-      { grade: "8TH", at: "09:56", end: "10:17" },
-      { grade: "6TH", at: "10:30", end: "10:47" },
-      { grade: "8TH", at: "11:00", end: "11:17" },
-      { grade: "7TH", at: "11:30", end: "12:25" }
+      { grade: "6TH", at: "08:45", end: "09:01" },
+      { grade: "7TH", at: "09:13", end: "09:29" },
+      { grade: "8TH", at: "09:41", end: "09:57" },
+      { grade: "6TH", at: "10:09", end: "10:29" },
+      { grade: "8TH", at: "11:41", end: "11:57" },
+      { grade: "7TH", at: "12:09", end: "12:25" }
     ],
     delay: [
       { grade: "6TH", at: "10:31", end: "11:19" },
@@ -124,12 +125,12 @@
       { grade:"7TH", start:"14:01", end:"14:55" }
     ],
     early: [
-      { grade:"6TH", start:"08:35", end:"09:09" },
-      { grade:"7TH", start:"09:12", end:"09:43" },
-      { grade:"8TH", start:"09:46", end:"10:17" },
-      { grade:"6TH", start:"10:20", end:"10:47" },
-      { grade:"8TH", start:"10:50", end:"11:17" },
-      { grade:"7TH", start:"11:20", end:"12:25" }
+      { grade:"6TH", start:"08:35", end:"09:01" },
+      { grade:"7TH", start:"09:03", end:"09:29" },
+      { grade:"8TH", start:"09:31", end:"09:57" },
+      { grade:"6TH", start:"09:59", end:"11:29" },
+      { grade:"8TH", start:"11:31", end:"11:57" },
+      { grade:"7TH", start:"11:59", end:"12:25" }
     ],
     delay: [
       { grade:"6TH", start:"10:21", end:"11:19" },
