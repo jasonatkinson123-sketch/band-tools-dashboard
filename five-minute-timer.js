@@ -1,0 +1,10 @@
+(()=>{'use strict';if(document.getElementById('derby-manual-timer'))return;
+const host=document.createElement('div');host.id='derby-manual-timer';document.body.appendChild(host);
+const root=host.attachShadow({mode:'open'});
+root.innerHTML=`<style>:host{position:fixed;left:12px;bottom:12px;z-index:2147483500;font-family:ui-monospace,Menlo,monospace;color:#111}*{box-sizing:border-box}.box{background:#fffdf7;border:3px solid #111;box-shadow:5px 5px #111;padding:10px;width:174px}.label{font-size:10px;font-weight:900;letter-spacing:.06em}.time{font-size:32px;font-weight:900;margin:5px 0;font-variant-numeric:tabular-nums}button{border:2px solid #111;background:#f1e4a2;padding:5px 8px;font:900 11px ui-monospace,monospace;cursor:pointer}button+button{margin-left:4px}.done{background:#b8edc5}@media(max-width:600px){.box{width:150px}.time{font-size:27px}}</style><div class="box"><div class="label">FIVE-MINUTE TIMER</div><div class="time" aria-live="off">05:00</div><button class="toggle">START</button><button class="reset">RESET</button></div>`;
+const time=root.querySelector('.time'),toggle=root.querySelector('.toggle'),box=root.querySelector('.box');
+let remaining=300000,end=0,running=false;
+function render(){let ms=running?Math.max(0,end-Date.now()):remaining;if(running&&ms===0){running=false;remaining=0;box.classList.add('done');toggle.textContent='START';}const s=Math.ceil(ms/1000);time.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+toggle.onclick=()=>{if(running){remaining=Math.max(0,end-Date.now());running=false;toggle.textContent='RESUME';}else{if(remaining===0)remaining=300000;end=Date.now()+remaining;running=true;box.classList.remove('done');toggle.textContent='PAUSE';}render();};
+root.querySelector('.reset').onclick=()=>{running=false;remaining=300000;toggle.textContent='START';box.classList.remove('done');render();};setInterval(render,200);render();
+})();
