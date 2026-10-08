@@ -410,7 +410,7 @@
       #dbfancy-reset { width:100%; border-width:2px; font-size:9px; }
       #dbcash-chip, #dbcash-panel, #dbcash-panel * { box-sizing:border-box; }
       #dbcash-chip {
-        position:fixed; z-index:2147483603; left:10px; bottom:max(10px, env(safe-area-inset-bottom));
+        position:fixed; z-index:2147483603; left:10px; bottom:max(145px, calc(env(safe-area-inset-bottom) + 135px));
         width:68px; height:68px; padding:6px; appearance:none; border:3px solid #111;
         background:#bdebd2; color:#111; cursor:pointer; box-shadow:5px 5px 0 #111;
         font:950 11px/1.05 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
