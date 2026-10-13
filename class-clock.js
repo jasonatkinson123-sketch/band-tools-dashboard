@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.07.1";
+  const VERSION = "2026.10.13.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -59,9 +59,9 @@
   // The 6th-grade full-day block 4 is split by lunch, so both bells are represented.
   const SCHEDULES = {
     full: [
-      { grade: "6TH", end: "09:33" },
-      { grade: "7TH", end: "10:31" },
-      { grade: "8TH", end: "11:29" },
+      { grade: "6TH", end: "09:37" },
+      { grade: "7TH", end: "10:34" },
+      { grade: "8TH", end: "11:31" },
       { grade: "6TH", end: "12:01", note: "LUNCH", countdownSeconds: 2 * 60 },
       { grade: "6TH", end: "13:01" },
       { grade: "8TH", end: "13:58" },
@@ -72,7 +72,7 @@
       { grade: "7TH", end: "09:29" },
       { grade: "8TH", end: "09:57" },
       { grade: "6TH", end: "10:29", note: "LUNCH", countdownSeconds: 2 * 60 },
-      { grade: "6TH", end: "11:29" },
+      { grade: "6TH", end: "11:31" },
       { grade: "8TH", end: "11:57" },
       { grade: "7TH", end: "12:25" }
     ],
@@ -90,12 +90,12 @@
   // prompts once before lunch rather than prompting a second time after lunch.
   const DOOR_KEEPER_PROMPTS = {
     full: [
-      { grade: "6TH", at: "08:45", end: "09:33" },
-      { grade: "7TH", at: "09:46", end: "10:31" },
-      { grade: "8TH", at: "10:44", end: "11:29" },
-      { grade: "6TH", at: "11:42", end: "12:01" },
-      { grade: "8TH", at: "13:14", end: "13:58" },
-      { grade: "7TH", at: "14:11", end: "14:55" }
+      { grade: "6TH", at: "08:45", end: "09:37" },
+      { grade: "7TH", at: "09:49", end: "10:34" },
+      { grade: "8TH", at: "10:46", end: "11:31" },
+      { grade: "6TH", at: "11:43", end: "12:01" },
+      { grade: "8TH", at: "13:13", end: "13:58" },
+      { grade: "7TH", at: "14:10", end: "14:55" }
     ],
     early: [
       { grade: "6TH", at: "08:45", end: "09:01" },
@@ -106,8 +106,8 @@
       { grade: "7TH", at: "12:09", end: "12:25" }
     ],
     delay: [
-      { grade: "6TH", at: "10:31", end: "11:19" },
-      { grade: "7TH", at: "11:32", end: "11:58" },
+      { grade: "6TH", at: "10:34", end: "11:19" },
+      { grade: "7TH", at: "11:33", end: "11:58" },
       { grade: "8TH", at: "12:11", end: "12:28" },
       { grade: "6TH", at: "12:41", end: "13:31" },
       { grade: "8TH", at: "13:44", end: "14:13" },
@@ -117,18 +117,18 @@
 
   const CLASS_PERIODS = {
     full: [
-      { grade:"6TH", start:"08:35", end:"09:33" },
-      { grade:"7TH", start:"09:36", end:"10:31" },
-      { grade:"8TH", start:"10:34", end:"11:29" },
-      { grade:"6TH", start:"11:32", end:"13:01" },
-      { grade:"8TH", start:"13:04", end:"13:58" },
-      { grade:"7TH", start:"14:01", end:"14:55" }
+      { grade:"6TH", start:"08:42", end:"09:37" },
+      { grade:"7TH", start:"09:39", end:"10:34" },
+      { grade:"8TH", start:"10:36", end:"11:31" },
+      { grade:"6TH", start:"11:33", end:"13:01" },
+      { grade:"8TH", start:"13:03", end:"13:58" },
+      { grade:"7TH", start:"14:00", end:"14:55" }
     ],
     early: [
-      { grade:"6TH", start:"08:35", end:"09:01" },
+      { grade:"6TH", start:"08:42", end:"09:01" },
       { grade:"7TH", start:"09:03", end:"09:29" },
       { grade:"8TH", start:"09:31", end:"09:57" },
-      { grade:"6TH", start:"09:59", end:"11:29" },
+      { grade:"6TH", start:"09:59", end:"11:31" },
       { grade:"8TH", start:"11:31", end:"11:57" },
       { grade:"7TH", start:"11:59", end:"12:25" }
     ],
