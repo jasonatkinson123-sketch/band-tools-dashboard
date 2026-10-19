@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2026.10.13.1";
+  const VERSION = "2026.10.19.1";
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -64,7 +64,7 @@
       { grade: "8TH", end: "11:31" },
       { grade: "6TH", end: "12:01", note: "LUNCH", countdownSeconds: 2 * 60 },
       { grade: "6TH", end: "13:01" },
-      { grade: "8TH", end: "13:58" },
+      { grade: "8TH", end: "13:58", finishStrong: true },
       { grade: "7TH", end: "14:55" }
     ],
     early: [
@@ -73,7 +73,7 @@
       { grade: "8TH", end: "09:57" },
       { grade: "6TH", end: "10:29", note: "LUNCH", countdownSeconds: 2 * 60 },
       { grade: "6TH", end: "11:31" },
-      { grade: "8TH", end: "11:57" },
+      { grade: "8TH", end: "11:57", finishStrong: true },
       { grade: "7TH", end: "12:25" }
     ],
     delay: [
@@ -81,7 +81,7 @@
       { grade: "7TH", end: "11:58" },
       { grade: "8TH", end: "12:28" },
       { grade: "6TH", end: "13:31" },
-      { grade: "8TH", end: "14:13" },
+      { grade: "8TH", end: "14:13", finishStrong: true },
       { grade: "7TH", end: "14:55" }
     ]
   };
@@ -284,6 +284,15 @@
       }
       #dbclock-box.dbclock-last-minute { background:#ff9b8f; }
       #dbclock-box.dbclock-bell { background:#a9f6bc; }
+      /* Fifth block: conceal the final 45 seconds to prevent a shouted countdown. */
+      #dbclock-box.dbclock-finish-strong { background:#e4f4dc; }
+      #dbclock-box.dbclock-finish-strong #dbclock-time,
+      #dbclock-box.dbclock-finish-strong #dbclock-meta,
+      #dbclock-box.dbclock-finish-strong #dbclock-track { display:none; }
+      #dbclock-finish { display:none; margin:12px 0 8px; text-transform:uppercase; }
+      #dbclock-box.dbclock-finish-strong #dbclock-finish { display:block; }
+      #dbclock-finish strong { display:block; font:950 clamp(25px,5vw,34px)/1 ui-monospace,monospace; letter-spacing:-.045em; margin-bottom:14px; }
+      #dbclock-finish span { display:block; font:850 15px/1.45 ui-monospace,monospace; letter-spacing:.015em; }
       #dbclock-topline { display:flex; align-items:center; justify-content:space-between; gap:10px; }
       #dbclock-kicker {
         font-size:12px; line-height:1.2; font-weight:900; letter-spacing:.12em; text-transform:uppercase;
@@ -495,6 +504,7 @@
         <button id="dbclock-close" type="button" aria-label="Dismiss this countdown">×</button>
       </div>
       <div id="dbclock-time">5:00</div>
+      <div id="dbclock-finish"><strong>FINISH STRONG</strong><span>INSTRUMENTS AWAY</span><span>QUIET VOICES</span><span>READY FOR DISMISSAL</span></div>
       <div id="dbclock-meta"><span id="dbclock-end">BELL 9:33 AM</span><span id="dbclock-mode">FULL DAY</span></div>
       <div id="dbclock-track" aria-hidden="true"><div id="dbclock-bar"></div></div>
     `;
@@ -1211,15 +1221,19 @@
   function showCountdown(slot, remaining, requestedMode, actualMode, isPreview = false) {
     const r = refs();
     const bell = remaining <= 0;
-    const lastMinute = remaining > 0 && remaining <= 60;
+    const finishStrong = !isPreview && slot.finishStrong && remaining > 0 && remaining <= 45;
+    const lastMinute = !finishStrong && remaining > 0 && remaining <= 60;
 
     r.box.classList.add("dbclock-show");
     r.box.classList.toggle("dbclock-last-minute", lastMinute);
     r.box.classList.toggle("dbclock-bell", bell);
-    document.body.classList.toggle("dbclock-three-minute-pulse", remaining > 0 && remaining <= 3 * 60);
+    r.box.classList.toggle("dbclock-finish-strong", !!finishStrong);
+    document.body.classList.toggle("dbclock-three-minute-pulse", !finishStrong && remaining > 0 && remaining <= 3 * 60);
 
     const suffix = slot.note ? ` • ${slot.note}` : "";
-    r.kicker.textContent = bell
+    r.kicker.textContent = finishStrong
+      ? "FIFTH BLOCK • CLOSE OUT"
+      : bell
       ? `BELL • ${slot.grade} GRADE${suffix}`
       : `CLOSE OUT • ${slot.grade} GRADE${suffix}`;
     r.time.textContent = bell ? "0:00" : formatRemaining(remaining);
@@ -1232,7 +1246,7 @@
 
   function hideCountdown() {
     const r = refs();
-    r.box.classList.remove("dbclock-show", "dbclock-last-minute", "dbclock-bell");
+    r.box.classList.remove("dbclock-show", "dbclock-last-minute", "dbclock-bell", "dbclock-finish-strong");
     document.body.classList.remove("dbclock-three-minute-pulse");
   }
 
