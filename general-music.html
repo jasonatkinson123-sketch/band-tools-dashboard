@@ -13,8 +13,19 @@
 #signal.show{display:flex;flex-direction:column;gap:30px}#signal .signal-back{font:12px/1.6 'Press Start 2P',monospace;background:var(--yellow);color:#11172f;text-decoration:none;border:4px solid white;padding:16px 24px;box-shadow:5px 5px 0 #111}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.schedule{grid-template-columns:repeat(2,1fr)}.card{padding:18px}.eyebrow{font-size:9px}h1{font-size:23px}.step{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.heading-row{display:flex;align-items:center;flex-wrap:wrap;gap:18px;margin:12px 0}.heading-row h1{margin:0}
+#assigned-seats-btn{font-size:10px;line-height:1.65;background:var(--cyan);border-color:var(--yellow);max-width:260px}
+#assigned-seats-btn:hover,#assigned-seats-btn:focus-visible{background:var(--yellow)}
+#seats-overlay{display:none;position:fixed;inset:0;z-index:30;background:rgba(9,14,36,.94);align-items:center;justify-content:center;text-align:center;padding:65px 24px}
+#seats-overlay.show{display:flex}
+.seats-panel{position:relative;width:min(950px,95vw);padding:clamp(32px,7vw,90px) 24px;border:10px solid var(--yellow);background:#243b78;box-shadow:14px 14px 0 #060a19;animation:seats-pop .35s ease-out both}
+.seats-message{font:clamp(26px,5vw,70px)/1.6 'Press Start 2P',monospace;color:var(--yellow);text-shadow:5px 5px 0 #11172f}
+#seats-close{position:absolute;right:12px;top:12px;min-width:46px;min-height:46px;padding:6px;background:var(--pink);font-size:20px}
+@keyframes seats-pop{from{transform:scale(.68);opacity:.25}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.seats-panel{animation:none}}
 </style></head>
-<body><main class="wrap"><a class="back" href="./">← BAND TOOLS</a><header><div class="eyebrow">07 / General Music · Teacher Hub</div><h1>General Music</h1><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
+<body><main class="wrap"><a class="back" href="./">← BAND TOOLS</a><header><div class="eyebrow">07 / General Music · Teacher Hub</div><div class="heading-row"><h1>General Music</h1><button type="button" id="assigned-seats-btn">BACK TO ASSIGNED SEATS</button></div><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
 <section class="grid">
 <div class="card wide"><div class="tag">01 / EVERY DAY</div><h2>Today's Routine</h2><div class="schedule"><div class="step"><span>01</span>ARRIVE</div><div class="step"><span>02</span>LISTEN</div><div class="step"><span>03</span>MAKE MUSIC</div><div class="step"><span>04</span>FINISH</div></div><p>Keep the sequence consistent. Change the music, not the routine.</p></div>
 <div class="card"><div class="tag">02 / CLASSROOM</div><h2>Stop & Listen</h2><p>Full-screen visual stop signal. Click anywhere or press Escape to return.</p><button id="stop">SHOW STOP</button></div>
@@ -24,7 +35,49 @@
 <div class="card"><div class="tag">09 / COMING SOON</div><h2>Rhythm Lab</h2><p>Call-and-response patterns, beat games, and controlled music-making.</p></div>
 <div class="card"><div class="tag">10 / COMING SOON</div><h2>Weekly Lessons</h2><p>Five-day modules, ready to project, with multiple ways for students to respond.</p></div>
 </section><p class="small">Teacher note: support pointing, gesture, AAC, and other nonverbal responses. No student needs to speak to participate.</p></main><div id="signal" role="button" tabindex="0" aria-label="Close stop signal"><div>STOP<br> & LISTEN</div><a class="signal-back" href="general-music.html" onclick="event.stopPropagation()">← BACK TO GENERAL MUSIC</a></div>
+<div id="seats-overlay" role="dialog" aria-modal="true" aria-label="Back to assigned seats"><div class="seats-panel"><button type="button" id="seats-close" aria-label="Close announcement">✕</button><div class="seats-message">BACK TO<br>ASSIGNED<br>SEATS!</div></div></div>
 <script>
+const seatsOverlay=document.getElementById('seats-overlay');
+const seatsButton=document.getElementById('assigned-seats-btn');
+const seatsClose=document.getElementById('seats-close');
+let seatsAudioContext;
+function seatsChime(){
+ const C=window.AudioContext||window.webkitAudioContext;
+ if(!C)return;
+ try{seatsAudioContext=seatsAudioContext||new C();if(seatsAudioContext.state==='suspended')seatsAudioContext.resume();
+ const now=seatsAudioContext.currentTime;
+ [[659.25,0],[987.77,.17],[1318.51,.34]].forEach(([hz,delay])=>{
+ const o=seatsAudioContext.createOscillator(),g=seatsAudioContext.createGain();
+ o.type='sine';o.frequency.value=hz;g.gain.setValueAtTime(.0001,now+delay);
+ g.gain.exponentialRampToValueAtTime(.09,now+delay+.035);
+ g.gain.exponentialRampToValueAtTime(.0001,now+delay+.8);
+ o.connect(g);g.connect(seatsAudioContext.destination);o.start(now+delay);o.stop(now+delay+.85);
+ });}catch(e){}
+}
+function seatsBritishVoice(){
+ const voices=window.speechSynthesis?.getVoices()||[];
+ return voices.find(v=>/^en-GB$/i.test(v.lang)&&/female|samantha|serena|kate|sonia|libby|martha|hazel/i.test(v.name))
+ ||voices.find(v=>/^en-GB$/i.test(v.lang))||null;
+}
+function announceSeats(){
+ seatsOverlay.classList.remove('show');
+ void seatsOverlay.offsetWidth; // Restart the enlargement animation each time.
+ seatsOverlay.classList.add('show');seatsClose.focus();
+ seatsChime();
+ if(!('speechSynthesis' in window))return;
+ try{
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance('Attention, at this time, please return to your assigned seats. Thank you.');
+ u.lang='en-GB';u.rate=.82;u.pitch=1.05;u.volume=1;
+ const voice=seatsBritishVoice();if(voice)u.voice=voice;
+ setTimeout(()=>window.speechSynthesis.speak(u),900);
+ }catch(e){}
+}
+function closeSeats(){seatsOverlay.classList.remove('show');if('speechSynthesis' in window)window.speechSynthesis.cancel();seatsButton.focus()}
+seatsButton.addEventListener('click',announceSeats);
+seatsClose.addEventListener('click',closeSeats);
+seatsOverlay.addEventListener('click',e=>{if(e.target===seatsOverlay)closeSeats()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&seatsOverlay.classList.contains('show'))closeSeats()});
 const signal=document.getElementById('signal');document.getElementById('stop').onclick=()=>signal.classList.add('show');signal.onclick=()=>signal.classList.remove('show');document.addEventListener('keydown',e=>{if(e.key==='Escape')signal.classList.remove('show')});
 const qs=['Is the music fast or slow?','Is the music loud or quiet?','What instrument do you hear?','Does the music sound happy, sad, or mysterious?','Is there a steady beat?','Did the music change? What changed?','Would this music fit an action scene or a quiet scene?'];let qi=0;document.getElementById('next').onclick=()=>{qi=(qi+1)%qs.length;document.getElementById('question').textContent=qs[qi]};
 let seconds=300,initial=300,running=false,handle;const display=()=>{document.getElementById('time').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')};document.querySelectorAll('[data-min]').forEach(b=>b.onclick=()=>{clearInterval(handle);running=false;seconds=initial=Number(b.dataset.min)*60;display()});document.getElementById('start').onclick=()=>{if(running)return;running=true;handle=setInterval(()=>{if(seconds>0){seconds--;display()}else{clearInterval(handle);running=false}},1000)};document.getElementById('reset').onclick=()=>{clearInterval(handle);running=false;seconds=initial;display()};
