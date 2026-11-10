@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Music Match Games | General Music</title>
+<style>
+:root{--navy:#17243a;--blue:#eaf5ff;--ink:#132b43;--green:#148a63;--coral:#cf4d5d;--gold:#f6c747}
+*{box-sizing:border-box}
+body{margin:0;background:#f0f6fc;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 85% 6%,#ffe7a6 0,transparent 27%),radial-gradient(circle at 8% 85%,#cce9f9 0,transparent 35%);pointer-events:none;z-index:-1}
+main{max-width:1120px;padding:20px 18px 65px;margin:auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.back{background:white;border:2px solid #b0c5d8;color:var(--ink);border-radius:14px;padding:11px 16px;text-decoration:none;font-weight:800}
+.eyebrow{font-weight:900;color:#236783;letter-spacing:.12em;font-size:.8rem;text-transform:uppercase}
+h1{font-size:clamp(2.2rem,6vw,4.6rem);margin:10px 0 10px;letter-spacing:-.035em;line-height:1.08}
+.intro{font-size:1.15rem;max-width:770px;line-height:1.5}
+.game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:25px}
+.game-link{appearance:none;display:flex;text-align:left;flex-direction:column;min-height:250px;border:4px solid #1c344d;border-radius:24px;background:white;padding:25px;box-shadow:7px 7px 0 #c5d6e6;cursor:pointer;color:var(--ink)}
+.game-link:hover,.game-link:focus-visible{outline:4px solid #157ba6;outline-offset:3px;transform:translateY(-2px)}
+.game-link .icon{font-size:4rem;line-height:1.2}
+.game-link strong{font-size:1.7rem;margin-top:14px}
+.game-link small{font-size:1.07rem;margin-top:10px;line-height:1.4}
+.game-link .go{margin-top:auto;padding-top:20px;font-weight:900;color:#176e70}
+.game-link:nth-child(2){background:#fff1e7}.game-link:nth-child(3){background:#e8f8ee}.game-link:nth-child(4){background:#efeaff}
+#play{display:none}
+#play.active{display:block}#home.hidden{display:none}
+.gamehead{background:#fff;border:3px solid #b6cbde;padding:23px;border-radius:22px;margin-top:20px}
+.gamehead h2{font-size:clamp(1.65rem,4vw,2.8rem);margin:8px 0}
+.hint{font-size:1.18rem;line-height:1.4;margin:6px 0}
+.status{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:1.1rem;font-weight:800;margin-top:14px}
+.track{height:15px;width:min(400px,100%);background:#dce9ef;border-radius:99px;overflow:hidden}
+#bar{display:block;background:var(--green);height:100%;width:0%;transition:width .2s}
+#prompt{margin:22px auto 14px;border:4px solid #254869;background:#fff;border-radius:25px;max-width:420px;min-height:230px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;padding:20px}
+#prompt-icon{font-size:clamp(5rem,12vw,8rem);line-height:1.2}
+#prompt-label{font-size:clamp(1.3rem,3vw,1.8rem);font-weight:900}
+.choose{font-size:1.3rem;font-weight:900;text-align:center;margin:17px}
+#choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.choice{appearance:none;cursor:pointer;border-radius:22px;border:4px solid #4a7292;background:white;color:var(--ink);padding:18px 10px;min-height:190px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.choice:focus-visible{outline:5px solid #ffac18;outline-offset:3px}
+.choice:disabled{opacity:1;cursor:default}
+.choice-icon{font-size:clamp(3rem,8vw,5.4rem);line-height:1.15;white-space:nowrap}
+.choice-label{font-size:clamp(1rem,2.4vw,1.32rem);font-weight:900;text-align:center}
+.choice.correct{border-color:#10885e;background:#d6f7e5;box-shadow:inset 0 0 0 3px #10885e}
+.choice.wrong{border-color:#c24f4e;background:#ffe2df;animation:shake .25s ease}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#feedback{min-height:65px;margin:17px auto;text-align:center;font-size:clamp(1.25rem,3vw,1.65rem);font-weight:900}
+#next{display:none;margin:0 auto;background:#ffc547;color:#182a3e;border:3px solid #17243a;padding:17px 33px;font-size:1.2rem;font-weight:900;border-radius:16px;cursor:pointer;min-height:60px}
+#next:focus-visible{outline:4px solid #157ba6}
+#finish{display:none;background:white;border:4px solid #10885e;border-radius:25px;text-align:center;padding:35px 15px;margin-top:28px}
+#finish .trophy{font-size:6rem}
+#finish h2{font-size:2.3rem}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.actions button,.actions a{font:inherit;font-weight:800;cursor:pointer;background:white;color:#18304b;border:2px solid #647f97;border-radius:14px;padding:12px 18px;text-decoration:none}
+.actions button:hover,.actions a:hover{background:#def1fb}
+.note{margin:28px auto;font-size:.95rem;color:#486078;line-height:1.5;max-width:850px}
+@media(max-width:650px){.game-grid{grid-template-columns:1fr}.game-link{min-height:210px}#choices{gap:8px}.choice{padding:10px 4px;min-height:155px;border-width:3px}.choice-icon{font-size:2.8rem}.choice-label{font-size:.95rem}#prompt{min-height:190px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body><main>
+<div class="top"><a class="back" href="general-music.html">← GENERAL MUSIC</a><span class="eyebrow">Tap • Match • Celebrate</span></div>
+<section id="home"><h1>🎵 Music Match!</h1><p class="intro">Four simple picture-matching games. Tap the picture that matches. No dragging, typing, reading aloud, or time limit required.</p>
+<div class="game-grid">
+<button class="game-link" data-game="twins"><span class="icon">🎺 🎺</span><strong>1. Same Picture</strong><small>Find the matching instrument picture.</small><span class="go">PLAY GAME →</span></button>
+<button class="game-link" data-game="families"><span class="icon">🎺 🥁</span><strong>2. Instrument Families</strong><small>Match an instrument to its music family.</small><span class="go">PLAY GAME →</span></button>
+<button class="game-link" data-game="actions"><span class="icon">👏 👂</span><strong>3. Music Actions</strong><small>Match simple music directions and pictures.</small><span class="go">PLAY GAME →</span></button>
+<button class="game-link" data-game="beats"><span class="icon">🥁 ●●●</span><strong>4. Count the Beats</strong><small>Match groups of dots from one to four.</small><span class="go">PLAY GAME →</span></button>
+</div></section>
+<section id="play" aria-label="Music matching activity"><div class="gamehead"><div class="top"><span class="eyebrow" id="game-number"></span><button class="back" id="home-btn" type="button">← ALL GAMES</button></div><h2 id="game-title"></h2><p class="hint" id="instructions"></p><div class="status"><span id="progress">1 of 6</span><div class="track" aria-label="Progress"><span id="bar"></span></div></div></div>
+<div id="round"><div id="prompt"><span id="prompt-icon" aria-hidden="true"></span><span id="prompt-label"></span></div><p class="choose">👇 Find the match</p><div id="choices"></div><div id="feedback" role="status" aria-live="polite"></div><button id="next" type="button">NEXT →</button></div>
+<div id="finish"><div class="trophy">🌟</div><h2>Great matching!</h2><p class="intro" style="margin:auto">You finished all six matches!</p><div class="actions"><button id="again" type="button">PLAY AGAIN ↻</button><button id="finished-home" type="button">ALL GAMES</button></div></div></section>
+<p class="note">Teacher note: These are original, PECS-inspired picture matching activities, not official PECS symbols or a PECS protocol. Students can respond by tapping, pointing, eye gaze, or using their AAC support. For family matching, a teacher can read the family name if needed.</p>
+</main>
+<script>
+'use strict';
+const instruments=[
+{id:'drum',icon:'🥁',name:'DRUM',family:'PERCUSSION'},
+{id:'trumpet',icon:'🎺',name:'TRUMPET',family:'BRASS'},
+{id:'violin',icon:'🎻',name:'VIOLIN',family:'STRINGS'},
+{id:'guitar',icon:'🎸',name:'GUITAR',family:'STRINGS'},
+{id:'piano',icon:'🎹',name:'PIANO',family:'KEYBOARD'},
+{id:'sax',icon:'🎷',name:'SAXOPHONE',family:'WOODWIND'}];
+const families=[{id:'PERCUSSION',icon:'🥁',name:'PERCUSSION'},{id:'BRASS',icon:'🎺',name:'BRASS'},{id:'STRINGS',icon:'🎻',name:'STRINGS'},{id:'KEYBOARD',icon:'🎹',name:'KEYBOARD'},{id:'WOODWIND',icon:'🎷',name:'WOODWIND'}];
+const actions=[{id:'clap',icon:'👏',name:'CLAP'},{id:'listen',icon:'👂',name:'LISTEN'},{id:'stop',icon:'✋',name:'STOP'},{id:'sing',icon:'🎤',name:'SING'},{id:'dance',icon:'💃',name:'DANCE'},{id:'play',icon:'🥁',name:'PLAY'}];
+const beat=(n)=>({id:String(n),icon:Array(n).fill('●').join(' '),name:n+' BEAT'+(n===1?'':'S')});
+const games={
+twins:{title:'Same Picture',intro:'Look at the big instrument. Tap the SAME picture.',items:instruments.map(x=>({prompt:x,answer:x,options:instruments}))},
+families:{title:'Instrument Families',intro:'Look at the instrument. Choose its family.',items:instruments.map(x=>({prompt:x,answer:families.find(f=>f.id===x.family),options:families}))},
+actions:{title:'Music Actions',intro:'Look at the big action. Find the SAME action picture.',items:actions.map(x=>({prompt:x,answer:x,options:actions}))},
+beats:{title:'Count the Beats',intro:'Count the big dots. Find the SAME number of dots.',items:[1,2,3,4,2,3].map(n=>({prompt:beat(n),answer:beat(n),options:[1,2,3,4].map(beat)}))}
+};
+const $=id=>document.getElementById(id);
+let active='',index=0,answered=false,rounds=[];
+function shuffle(arr){let a=arr.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function start(id){
+ active=id;index=0;answered=false;
+ rounds=shuffle(games[id].items).slice(0,6);
+ $('home').classList.add('hidden');$('play').classList.add('active');$('finish').style.display='none';$('round').style.display='block';
+ $('game-number').textContent='GAME '+(['twins','families','actions','beats'].indexOf(id)+1)+' OF 4';
+ $('game-title').textContent=games[id].title;$('instructions').textContent=games[id].intro;
+ history.replaceState(null,'','#'+id);
+ showRound();window.scrollTo({top:0,behavior:'instant'});
+}
+function showRound(){
+ answered=false;const item=rounds[index];
+ $('progress').textContent=(index+1)+' of '+rounds.length;
+ $('bar').style.width=(index/rounds.length*100)+'%';
+ $('prompt-icon').textContent=item.prompt.icon;
+ $('prompt-label').textContent=item.prompt.name;
+ $('feedback').textContent='';$('next').style.display='none';
+ const wrong=shuffle(item.options.filter(o=>o.id!==item.answer.id)).slice(0,2);
+ const choices=shuffle([item.answer,...wrong]);$('choices').replaceChildren();
+ for(const option of choices){
+  const b=document.createElement('button');b.type='button';b.className='choice';
+  b.setAttribute('aria-label',option.name);
+  const icon=document.createElement('span');icon.className='choice-icon';icon.textContent=option.icon;icon.setAttribute('aria-hidden','true');
+  const name=document.createElement('span');name.className='choice-label';name.textContent=option.name;
+  b.append(icon,name);b.addEventListener('click',()=>choose(b,option,item.answer));
+  $('choices').append(b);
+ }
+}
+function choose(button,option,answer){
+ if(answered)return;
+ if(option.id===answer.id){
+  answered=true;button.classList.add('correct');
+  $('feedback').textContent='✅ YES! GREAT MATCH!';
+  $('bar').style.width=((index+1)/rounds.length*100)+'%';
+  $('choices').querySelectorAll('button').forEach(b=>b.disabled=true);
+  $('next').textContent=index===rounds.length-1?'FINISH ★':'NEXT →';
+  $('next').style.display='block';$('next').focus();
+ }else{
+  button.classList.add('wrong');$('feedback').textContent='Try another picture.';
+  setTimeout(()=>button.classList.remove('wrong'),650);
+ }
+}
+function next(){if(!answered)return;if(++index>=rounds.length){$('round').style.display='none';$('finish').style.display='block';$('bar').style.width='100%';$('progress').textContent='6 of 6';$('again').focus();}else{showRound();}}
+function home(){active='';$('play').classList.remove('active');$('home').classList.remove('hidden');history.replaceState(null,'',location.pathname);window.scrollTo({top:0,behavior:'instant'});}
+document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click',()=>start(b.dataset.game)));
+$('next').addEventListener('click',next);$('again').addEventListener('click',()=>start(active));$('home-btn').addEventListener('click',home);$('finished-home').addEventListener('click',home);
+const initial=location.hash.slice(1);if(games[initial])start(initial);
+</script></body></html>
