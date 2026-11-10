@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Listening Library · General Music</title>
+<style>
+:root{--dark:#14233c;--navy:#213e5d;--gold:#facd62;--blue:#dcecf7;--ink:#1c3149}*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;color:var(--ink);font:17px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f7f7}
+main{max-width:1200px;margin:auto;padding:18px 18px 60px}
+a{color:inherit}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.back{font-weight:800;text-decoration:none;border:2px solid #b3c4d2;background:white;padding:10px 16px;border-radius:12px}
+.hero{margin-top:16px;background:var(--dark);color:white;border-radius:24px;padding:clamp(24px,5vw,46px);background-image:radial-gradient(ellipse at 85% 0%,#325b75,transparent 55%)}
+.hero .kicker{letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-size:.82rem;font-weight:900}
+h1{font-size:clamp(2.3rem,5vw,4.1rem);line-height:1.12;margin:10px 0} .hero p{max-width:760px;color:#e7ecf2}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+input,select,button{font:inherit}input,select{background:white;border:2px solid #abbecb;color:#172f47;border-radius:12px;padding:11px 13px;min-height:48px}
+#search{flex:1 1 240px}.button{background:#ffe09b;border:2px solid #14233c;border-radius:12px;padding:11px 15px;min-height:48px;cursor:pointer;font-weight:850}
+.button:hover,.button:focus-visible{background:#bceaf2;outline:2px solid #2a698a;outline-offset:2px}
+#count{font-size:.95rem;color:#475d6a;font-weight:800;margin-bottom:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{border:2px solid #c2d1dc;box-shadow:0 3px 0 #e1e8ef;border-radius:17px;background:white;display:flex;flex-direction:column;padding:16px;gap:8px}
+.card.playing{border:3px solid #176c85;background:#eefbfc}
+.label{font-size:.76rem;letter-spacing:.07em;text-transform:uppercase;font-weight:900;color:#447187}
+.card h3{font-size:1.22rem;line-height:1.2;margin:0}.artist{margin:0;color:#50697a;font-size:.95rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{background:#e8f1f6;padding:4px 8px;border-radius:8px;font-size:.78rem;font-weight:800}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}.card-actions button{border:1px solid #9bb2bf;background:#eff7fc;border-radius:10px;cursor:pointer;min-height:43px;padding:7px 11px;font-weight:850}
+.card-actions .select{background:var(--gold);border-color:var(--dark);flex:1}
+.player{position:sticky;top:14px;border:3px solid var(--navy);border-radius:22px;padding:22px;background:white;box-shadow:5px 5px 0 #dbe6ed}
+.player h2{font-size:1.5rem;margin:8px 0 3px}.muted{color:#5c6e7b}
+.player audio{width:100%;margin-top:15px}
+#source{display:inline-block;margin-top:11px;text-decoration:underline;font-size:.9rem}
+#playing-status{font-size:.94rem;color:#536a7c;min-height:35px}
+.promptbox{background:#e9f4fc;border-radius:16px;padding:15px;margin-top:20px}
+.promptbox h3{margin:0 0 8px}
+.promptbox p{margin:8px 0 10px;font-size:1.08rem;font-weight:850}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.choices button{font-size:1.05rem;font-weight:900;min-height:60px;border:2px solid #7693a8;background:white;border-radius:12px;cursor:pointer}
+.choices button:focus-visible{outline:3px solid #175ec4}
+.choices button[aria-pressed=true]{background:#ffe09b;border-color:#182e4b}
+#answer-text{min-height:26px;color:#244f68;font-weight:800;margin-top:9px}
+.player-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.player-actions .button{font-size:.92rem}
+.note{margin:24px 0;color:#4b6071;font-size:.9rem;max-width:900px}
+@media(max-width:920px){.layout{grid-template-columns:1fr}.player{position:static;grid-row:1}}
+@media(max-width:600px){.cards{grid-template-columns:1fr}.hero{padding:24px}.player{padding:16px}}
+</style></head><body><main>
+<nav class="top"><a class="back" href="general-music.html">← GENERAL MUSIC</a><a class="back" href="./">BAND TOOLS</a></nav>
+<header class="hero"><div class="kicker">General Music / Listening Station</div><h1>🎧 Listening Library</h1><p>30 curated listening selections. No YouTube, accounts, or advertising on this page. Choose a piece, press play, and optionally use picture-choice listening prompts.</p></header>
+<div class="toolbar"><input id="search" type="search" placeholder="Search music, composer, instrument…" aria-label="Search recordings"><select id="genre" aria-label="Genre"><option value="">All genres</option><option>Classical</option><option>Jazz &amp; Ragtime</option><option>World &amp; Folk</option><option>Modern &amp; Media</option></select><select id="tempo" aria-label="Tempo"><option value="">All tempos</option><option>Slow</option><option>Medium</option><option>Fast</option></select><select id="mood" aria-label="Mood"><option value="">All moods</option></select><button class="button" id="random">🎲 SURPRISE ME</button><button class="button" id="favorites">☆ FAVORITES</button></div>
+<div id="count" aria-live="polite"></div>
+<div class="layout"><section aria-label="Recording selections"><div id="cards" class="cards"></div></section>
+<aside class="player" aria-label="Listening player">
+<div class="label">Now listening</div><h2 id="now-title">Choose a recording</h2><div id="now-artist" class="muted">Select a card to begin.</div>
+<audio id="audio" preload="none" controls aria-label="Music player"></audio>
+<div id="playing-status" role="status" aria-live="polite">Music plays after you press Play.</div><a id="source" hidden target="_blank" rel="noopener noreferrer">Recording &amp; license details ↗</a>
+<div class="player-actions"><button id="restart" class="button">↺ START OVER</button><button id="next-random" class="button">🎲 ANOTHER</button></div>
+<div class="promptbox"><h3>🧠 Guided Listening</h3><p id="prompt">Is the music fast or slow?</p><div id="options" class="choices"></div><div id="answer-text" role="status" aria-live="polite"></div><button class="button" id="new-prompt" style="margin-top:8px">NEXT QUESTION →</button></div>
+</aside></div>
+<p class="note">Recordings link to their Wikimedia Commons file pages, where performance credit and licensing are shown. These are selected examples, not necessarily the best-known commercial performances; some are historical recordings, arrangements, or synthesized performances. Streaming depends on Wikimedia's availability and the school network. If playback fails, use “Recording &amp; license details” to open the source file directly. Music is not auto-played.</p>
+</main><script>
+"use strict";
+const CATALOG=[["Moonlight Sonata (1st movement)","Beethoven","Classical","Piano","Quiet","Slow","Moonlight Sonata.ogg","Listen for long, connected piano phrases."],["Für Elise","Beethoven","Classical","Piano","Gentle","Medium","FurElise.ogg","Can you recognize the repeating opening melody?"],["Eine kleine Nachtmusik","Mozart","Classical","Strings","Bright","Fast","Mozart - Eine kleine Nachtmusik - 1. Allegro.ogg","Hear the string ensemble play together."],["In the Hall of the Mountain King","Grieg","Classical","Orchestra","Mysterious","Fast","Musopen - In the Hall Of The Mountain King.ogg","Does the music grow faster or louder?"],["Toccata and Fugue in D minor","J. S. Bach","Classical","Organ","Dramatic","Fast","Kevin MacLeod - J S Bach Toccata and Fugue in D Minor.ogg","Listen for the enormous organ sound."],["Danse macabre","Saint-Saëns","Classical","Orchestra","Mysterious","Fast","PhiladelphiaSymphonyOrchestra-DanseMacabre.ogg","Does the music sound playful, scary, or both?"],["Boléro (historical performance)","Ravel","Classical","Orchestra","Steady","Medium","Bolero-Maurice Ravel-1930.ogg","Notice the repeating rhythm and instruments joining."],["William Tell Overture (finale)","Rossini","Classical","Orchestra","Exciting","Fast","William Tell2.ogg","Can you feel the quick, galloping rhythm?"],["Swan Lake: Waltz","Tchaikovsky","Classical","Orchestra","Elegant","Medium","Tchaikovsky Swan Lake Op.20 No.2.Waltz.ogg","Can you sway to the three-beat pattern?"],["Canon in D (piano version)","Pachelbel","Classical","Piano","Calm","Slow","Pachelbel's Canon.ogg","Listen for repeating patterns."],["Gymnopédie No. 1","Erik Satie","Classical","Piano","Calm","Slow","Erik Satie - gymnopedies - la 1 ere. lent et douloureux.ogg","What does the quiet piano music make you picture?"],["Turkish March","Mozart","Classical","Piano","Bright","Fast","Mozart - Piano Sonata No. 11 in A major - III. Allegro (Turkish March).ogg","Find the bouncy, repeated rhythm."],["Moonlight Sonata (3rd movement)","Beethoven","Classical","Piano","Dramatic","Fast","Beethoven Moonlight 3rd movement.ogg","Compare this with the quiet first movement."],["Swan Lake: Dance of the Little Swans","Tchaikovsky","Classical","Orchestra","Playful","Fast","Tchaikovsky Swan Lake Op.20 No.13. Danses des cygnes IV.ogg","Listen for the short, repeated musical gestures."],["The Entertainer","Scott Joplin","Jazz & Ragtime","Piano","Playful","Medium","The Entertainer - Scott Joplin.ogg","Notice the offbeat ragtime rhythm."],["Maple Leaf Rag","Scott Joplin","Jazz & Ragtime","Piano","Bright","Fast","Scott Joplin - Maple Leaf Rag.ogg","Can you tap a steady beat beneath the busy melody?"],["Rhapsody in Blue (historical)","George Gershwin","Jazz & Ragtime","Piano","Dramatic","Medium","George Gershwin playing Rhapsody in Blue.ogg","Listen for classical and jazz influences together."],["Ragtime Dance","Scott Joplin","Jazz & Ragtime","Piano","Playful","Fast","Scott Joplin - Ragtime Dance (1906).ogg","Is the rhythm straight or syncopated?"],["New Rag","Scott Joplin","Jazz & Ragtime","Piano","Bright","Fast","Scott Joplin - New Rag (1912).ogg","Where do you hear the repeated sections?"],["Original Rags","Scott Joplin","Jazz & Ragtime","Piano","Playful","Medium","Scott Joplin - Original Rags (1899).ogg","Listen to how the bass and melody work together."],["When the Saints Go Marching In","Traditional / Grant Barrett","Jazz & Ragtime","Ensemble","Bright","Medium","01 When The Saints Go Marchin' In.ogg","Can you recognize the familiar melody?"],["When the Saints (live performance)","Harry Connick Jr. & ensemble","Jazz & Ragtime","Piano","Joyful","Fast","When the Saints Go Marching In - Harry Connick Jr. playing Steinway grand piano.ogg","Listen for the piano and voices."],["Balinese Gamelan","Traditional Balinese ensemble","World & Folk","Percussion","Energetic","Fast","Gamelan Anklung Berong Pengetjet (1931).ogg","Listen for layers of metallic percussion."],["Djembe Rhythm","Traditional rhythm","World & Folk","Percussion","Steady","Medium","Djembe.ogg","Can you copy the drum pattern?"],["Djembe Performance","Traditional rhythm","World & Folk","Percussion","Energetic","Fast","Djembee2.ogg","How many different drum sounds do you hear?"],["Carefree","Kevin MacLeod","Modern & Media","Ensemble","Happy","Medium","Kevin MacLeod - Carefree.ogg","What kind of scene would this music fit?"],["Sneaky Snitch","Kevin MacLeod","Modern & Media","Ensemble","Mysterious","Medium","Sneaky Snitch by Kevin MacLeod.ogg","Listen for the oboe and plucked strings."],["Cipher","Kevin MacLeod","Modern & Media","Electronic","Mysterious","Medium","Cipher (ISRC USUAN1100844).oga","Does the sound remind you of a film or a game?"],["Boléro (modern digital arrangement)","Ravel / Omega13a","Modern & Media","Orchestra","Steady","Medium","Boléro – Maurice Ravel.ogg","Compare the orchestra colors with the historical version."],["The Strenuous Life","Scott Joplin","Jazz & Ragtime","Piano","Bright","Fast","Scott Joplin - The Strenuous Life (1902).ogg","Find a musical idea that repeats."]];
+const TRACKS=CATALOG.map((row,id)=>({id,title:row[0],artist:row[1],genre:row[2],instrument:row[3],mood:row[4],tempo:row[5],filename:row[6],focus:row[7]}));
+const $=id=>document.getElementById(id);const filePage=t=>"https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(t.filename.replace(/ /g,"_"));
+const choices=[{q:"Does the music feel FAST or SLOW?",a:["🐢 SLOW","🐇 FAST"]},{q:"Is the sound mostly LOUD or QUIET?",a:["🔉 QUIET","🔊 LOUD"]},{q:"What mood do you hear?",a:["😊 HAPPY","😌 CALM","😮 EXCITING","😨 MYSTERIOUS"]},{q:"Can you feel a steady beat?",a:["🥁 YES","🤔 NOT SURE"]},{q:"Does the sound CHANGE?",a:["🔄 YES","➖ NO"]},{q:"Do you hear one instrument or many?",a:["🎹 ONE","🎻 MANY"]}];
+let current=null,quiz=0,favs=new Set(),onlyFavs=false,selectToken=0;
+try{favs=new Set(JSON.parse(localStorage.getItem("listening-favs-v1")||"[]"));}catch{}
+const save=()=>{try{localStorage.setItem("listening-favs-v1",JSON.stringify([...favs]));}catch{}};
+function question(){const q=choices[quiz%choices.length];$('prompt').textContent=q.q;$('options').replaceChildren();$('answer-text').textContent='';
+ q.a.forEach(option=>{const b=document.createElement('button');b.type='button';b.textContent=option;b.setAttribute('aria-pressed','false');
+ b.addEventListener('click',()=>{$('options').querySelectorAll('button').forEach(el=>el.setAttribute('aria-pressed',String(el===b)));$('answer-text').textContent='Thanks for listening! Tell us what you noticed.';});$('options').append(b);});}
+function render(){const search=$('search').value.trim().toLowerCase();const items=TRACKS.filter(t=>(!search||[t.title,t.artist,t.genre,t.instrument,t.mood,t.tempo].join(" ").toLowerCase().includes(search))&&(!$('genre').value||t.genre===$('genre').value)&&(!$('tempo').value||t.tempo===$('tempo').value)&&(!$('mood').value||t.mood===$('mood').value)&&(!onlyFavs||favs.has(t.id)));
+ $('count').textContent=items.length+' of '+TRACKS.length+' selections';$('cards').replaceChildren();
+ items.forEach(t=>{const card=document.createElement('article');card.className='card'+(current?.id===t.id?' playing':'');
+ const label=document.createElement('div');label.className='label';label.textContent=t.genre;
+ const h=document.createElement('h3');h.textContent=t.title;
+ const artist=document.createElement('p');artist.className='artist';artist.textContent=t.artist;
+ const tags=document.createElement('div');tags.className='tags';[t.instrument,t.mood,t.tempo].forEach(tag=>{const sp=document.createElement('span');sp.textContent=tag;tags.append(sp)});
+ const actions=document.createElement('div');actions.className='card-actions';
+ const btn=document.createElement('button');btn.className='select';btn.textContent='▶ LISTEN';btn.addEventListener('click',()=>select(t,true));
+ const fav=document.createElement('button');fav.textContent=favs.has(t.id)?'★ SAVED':'☆ SAVE';fav.setAttribute('aria-label',(favs.has(t.id)?'Unsave ':'Save ')+t.title);fav.addEventListener('click',()=>{favs.has(t.id)?favs.delete(t.id):favs.add(t.id);save();render()});
+ actions.append(btn,fav);card.append(label,h,artist,tags,actions);$('cards').append(card);});}
+async function select(t,fromClick){current=t;render();$('now-title').textContent=t.title;$('now-artist').textContent=t.artist+' · '+t.genre;$('source').href=filePage(t);$('source').hidden=false;
+ $('audio').pause();$('audio').removeAttribute('src');$('audio').load();$('playing-status').textContent='Finding the Wikimedia audio file…';$('answer-text').textContent='';const token=++selectToken;
+ try{
+ const api=new URL('https://commons.wikimedia.org/w/api.php');api.searchParams.set('action','query');api.searchParams.set('format','json');api.searchParams.set('origin','*');api.searchParams.set('prop','imageinfo');api.searchParams.set('iiprop','url|mime');api.searchParams.set('titles','File:'+t.filename);
+ const response=await fetch(api,{mode:'cors'});if(!response.ok)throw Error('Source lookup unavailable');
+ const result=await response.json();if(token!==selectToken)return;
+ const page=Object.values(result.query?.pages||{})[0];const info=page?.imageinfo?.[0];
+ if(!info?.url||!String(info.mime||'').startsWith('audio/'))throw Error('Recording file unavailable');
+ $('audio').src=info.url;$('audio').load();$('playing-status').textContent='Ready. Press ▶ in the audio player to listen.';
+ if(fromClick){try{await $('audio').play();$('playing-status').textContent='Playing · '+t.focus}catch{$('playing-status').textContent='Ready. Press ▶ in the audio player to listen.'}}
+ }catch(error){if(token!==selectToken)return;$('playing-status').textContent='Could not load the audio here. Open the recording source link below.'}
+ if(window.innerWidth<920)$('now-title').scrollIntoView({behavior:'smooth',block:'center'});
+}
+$('audio').addEventListener('error',()=>{if(current)$('playing-status').textContent='This recording could not play in your browser. Open its source link below.';});
+$('audio').addEventListener('play',()=>{if(current)$('playing-status').textContent='Playing · '+current.focus;});
+$('audio').addEventListener('pause',()=>{if(current&&!$('audio').ended&&$('audio').currentTime>0)$('playing-status').textContent='Paused';});
+function random(){const candidates=TRACKS.filter(t=>(!$('genre').value||t.genre===$('genre').value)&&(!onlyFavs||favs.has(t.id)));if(!candidates.length)return;select(candidates[Math.floor(Math.random()*candidates.length)],true)}
+$('search').addEventListener('input',render);['genre','tempo','mood'].forEach(id=>$(id).addEventListener('change',render));
+$('random').addEventListener('click',random);$('next-random').addEventListener('click',random);
+$('favorites').addEventListener('click',()=>{onlyFavs=!onlyFavs;$('favorites').textContent=onlyFavs?'★ SHOW ALL':'☆ FAVORITES';render()});
+$('restart').addEventListener('click',()=>{if(current&&$('audio').src){$('audio').currentTime=0;$('audio').play().catch(()=>{});}});
+$('new-prompt').addEventListener('click',()=>{quiz++;question()});
+[...new Set(TRACKS.map(t=>t.mood))].sort().forEach(m=>{const o=document.createElement('option');o.textContent=m;$('mood').append(o)});
+question();render();
+</script></body></html>
