@@ -10,7 +10,7 @@
 .controls{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}button{cursor:pointer;background:var(--yellow);color:#11172f;border:3px solid #fff;padding:13px 16px;font:12px/1.5 'Press Start 2P',monospace;box-shadow:4px 4px 0 #080e20}button:hover,button:focus-visible{background:var(--cyan);outline:2px solid white}button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #080e20}
 .timer{font:clamp(42px,5vw,72px) 'VT323',monospace;color:var(--cyan);text-shadow:3px 3px #07112b;margin:15px 0}.small{font-size:19px;color:var(--muted);margin-top:30px}
 #signal{display:none;position:fixed;inset:0;z-index:10;background:#a51f46;color:white;align-items:center;justify-content:center;text-align:center;font:clamp(32px,6vw,84px)/1.5 'Press Start 2P',monospace;cursor:pointer;text-shadow:6px 6px #451029;border:15px solid #ff8fa8}
-#signal.show{display:flex;flex-direction:column;gap:30px}#signal .signal-back{font:12px/1.6 'Press Start 2P',monospace;background:var(--yellow);color:#11172f;text-decoration:none;border:4px solid white;padding:16px 24px;box-shadow:5px 5px 0 #111}
+#signal.show{display:flex;flex-direction:column;gap:30px}#signal .signal-close{position:absolute;top:16px;right:16px;background:var(--yellow);color:#11172f;font:22px Arial,sans-serif;padding:10px 16px;border:3px solid white;cursor:pointer}#signal .signal-replay{font-size:11px;background:var(--yellow);color:#11172f}#signal .signal-back{font:12px/1.6 'Press Start 2P',monospace;background:var(--yellow);color:#11172f;text-decoration:none;border:4px solid white;padding:16px 24px;box-shadow:5px 5px 0 #111}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.schedule{grid-template-columns:repeat(2,1fr)}.card{padding:18px}.eyebrow{font-size:9px}h1{font-size:23px}.step{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
@@ -28,14 +28,14 @@
 <body><main class="wrap"><a class="back" href="./">← BAND TOOLS</a><header><div class="eyebrow">07 / General Music · Teacher Hub</div><div class="heading-row"><h1>General Music</h1><button type="button" id="assigned-seats-btn">BACK TO ASSIGNED SEATS</button></div><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
 <section class="grid">
 <div class="card wide"><div class="tag">01 / EVERY DAY</div><h2>Today's Routine</h2><div class="schedule"><div class="step"><span>01</span>ARRIVE</div><div class="step"><span>02</span>LISTEN</div><div class="step"><span>03</span>MAKE MUSIC</div><div class="step"><span>04</span>FINISH</div></div><p>Keep the sequence consistent. Change the music, not the routine.</p></div>
-<div class="card"><div class="tag">02 / CLASSROOM</div><h2>Stop & Listen</h2><p>Full-screen visual stop signal. Click anywhere or press Escape to return.</p><button id="stop">SHOW STOP</button></div>
+<div class="card"><div class="tag">02 / CLASSROOM</div><h2>Stop & Listen</h2><p>Full-screen stop signal with a chime and British voice. Trigger it whenever you need the class’s attention.</p><button type="button" id="stop">🔊 STOP &amp; LISTEN</button></div>
 <div class="card"><div class="tag">03 / CLASSROOM</div><h2>Activity Timer</h2><div class="timer" id="time" aria-live="off">05:00</div><div class="controls"><button data-min="3">3 MIN</button><button data-min="5">5 MIN</button><button data-min="10">10 MIN</button><button id="start">START</button><button id="reset">RESET</button></div></div>
 <div class="card"><div class="tag">04 / QUICK PROMPT</div><h2>Listening Question</h2><p id="question" style="font-size:20px;color:#111;font-weight:700">Is the music fast or slow?</p><button id="next">NEXT QUESTION →</button></div>
 <a class="card game-card" href="this-or-that.html" style="text-decoration:none;border-color:#ffd447;background:#33436e"><div class="tag">05 / PLAY NOW ★</div><h2>THIS OR THAT?</h2><p>12 colorful music choices. Vote A or B, one round at a time.</p><span style="color:#5de4e7;font:11px 'Press Start 2P',monospace">START GAME →</span></a><a class="card game-card" href="two-truths-and-a-lie.html" style="text-decoration:none;border-color:#ff73a9;background:#33436e"><div class="tag">06 / PLAY NOW ★</div><h2>TWO TRUTHS &amp; A LIE</h2><p>10 rounds about your teacher. Guess the lie, then reveal the answer!</p><span style="color:#5de4e7;font:11px 'Press Start 2P',monospace">START GAME →</span></a><a class="card game-card" href="arcade.html" style="text-decoration:none;border-color:#5de4e7;background:#283b70"><div class="tag">07 / ARCADE ★</div><h2>VIDEO GAMES</h2><p>Enter the Music Arcade! Play Simon Says: Sound Edition.</p><span style="color:#ffd447;font:11px 'Press Start 2P',monospace">ENTER ARCADE →</span></a><div class="card"><div class="tag">08 / COMING SOON</div><h2>Listening Library</h2><p>A curated set of short excerpts with simple visual response questions.</p></div>
 <div class="card"><div class="tag">09 / COMING SOON</div><h2>Rhythm Lab</h2><p>Call-and-response patterns, beat games, and controlled music-making.</p></div>
 <div class="card"><div class="tag">10 / COMING SOON</div><h2>Weekly Lessons</h2><p>Five-day modules, ready to project, with multiple ways for students to respond.</p></div>
 <a class="card game-card" href="nursery-rhyme-song-board.html" style="text-decoration:none;border-color:#ffd447;background:#33436e"><div class="tag">11 / SING ALONG</div><h2>Nursery Rhyme Song Board</h2><p>Choose a song, then tap a picture to cue the next action or verse.</p><span style="color:#5de4e7;font:11px 'Press Start 2P',monospace">OPEN SONG BOARD →</span></a>
-</section><p class="small">Teacher note: support pointing, gesture, AAC, and other nonverbal responses. No student needs to speak to participate.</p></main><div id="signal" role="button" tabindex="0" aria-label="Close stop signal"><div>STOP<br> & LISTEN</div><a class="signal-back" href="general-music.html" onclick="event.stopPropagation()">← BACK TO GENERAL MUSIC</a></div>
+</section><p class="small">Teacher note: support pointing, gesture, AAC, and other nonverbal responses. No student needs to speak to participate.</p></main><div id="signal" role="dialog" aria-modal="true" aria-label="Stop and listen announcement"><button type="button" class="signal-close" id="signal-close" aria-label="Close stop signal">✕</button><div>STOP<br> &amp; LISTEN</div><button type="button" class="signal-replay" id="signal-replay">🔊 PLAY ANNOUNCEMENT AGAIN</button><button type="button" class="signal-back" id="signal-back">← BACK TO GENERAL MUSIC</button></div>
 <div id="seats-overlay" role="dialog" aria-modal="true" aria-label="Back to assigned seats"><div class="seats-panel"><button type="button" id="seats-close" aria-label="Close announcement">✕</button><div class="seats-message">BACK TO<br>ASSIGNED<br>SEATS!</div></div></div>
 <script>
 const seatsOverlay=document.getElementById('seats-overlay');
@@ -79,7 +79,43 @@ seatsButton.addEventListener('click',announceSeats);
 seatsClose.addEventListener('click',closeSeats);
 seatsOverlay.addEventListener('click',e=>{if(e.target===seatsOverlay)closeSeats()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&seatsOverlay.classList.contains('show'))closeSeats()});
-const signal=document.getElementById('signal');document.getElementById('stop').onclick=()=>signal.classList.add('show');signal.onclick=()=>signal.classList.remove('show');document.addEventListener('keydown',e=>{if(e.key==='Escape')signal.classList.remove('show')});
+const signal=document.getElementById('signal');
+const stopButton=document.getElementById('stop');
+const signalReplay=document.getElementById('signal-replay');
+let stopSpeechTimer=null;
+function playStopAnnouncement(){
+ // Audio starts only after a teacher clicks the button.
+ seatsChime();
+ if(!('speechSynthesis' in window))return;
+ clearTimeout(stopSpeechTimer);
+ window.speechSynthesis.cancel();
+ const speak=()=>{
+   if(!signal.classList.contains('show'))return;
+   const u=new SpeechSynthesisUtterance('Stop and listen!');
+   u.lang='en-GB';u.rate=.78;u.pitch=1;u.volume=1;
+   const voice=seatsBritishVoice();
+   if(voice)u.voice=voice;
+   window.speechSynthesis.speak(u);
+ };
+ stopSpeechTimer=setTimeout(speak,850);
+}
+function openStop(){
+ signal.classList.add('show');
+ document.getElementById('signal-close').focus();
+ playStopAnnouncement();
+}
+function closeStop(){
+ signal.classList.remove('show');
+ clearTimeout(stopSpeechTimer);
+ if('speechSynthesis' in window)window.speechSynthesis.cancel();
+ stopButton.focus();
+}
+stopButton.addEventListener('click',openStop);
+signalReplay.addEventListener('click',playStopAnnouncement);
+document.getElementById('signal-close').addEventListener('click',closeStop);
+document.getElementById('signal-back').addEventListener('click',closeStop);
+signal.addEventListener('click',e=>{if(e.target===signal)closeStop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&signal.classList.contains('show'))closeStop()});
 const qs=['Is the music fast or slow?','Is the music loud or quiet?','What instrument do you hear?','Does the music sound happy, sad, or mysterious?','Is there a steady beat?','Did the music change? What changed?','Would this music fit an action scene or a quiet scene?'];let qi=0;document.getElementById('next').onclick=()=>{qi=(qi+1)%qs.length;document.getElementById('question').textContent=qs[qi]};
 let seconds=300,initial=300,running=false,handle;const display=()=>{document.getElementById('time').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')};document.querySelectorAll('[data-min]').forEach(b=>b.onclick=()=>{clearInterval(handle);running=false;seconds=initial=Number(b.dataset.min)*60;display()});document.getElementById('start').onclick=()=>{if(running)return;running=true;handle=setInterval(()=>{if(seconds>0){seconds--;display()}else{clearInterval(handle);running=false}},1000)};document.getElementById('reset').onclick=()=>{clearInterval(handle);running=false;seconds=initial;display()};
 </script></body></html>
