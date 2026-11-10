@@ -77,17 +77,23 @@ function render(){const search=$('search').value.trim().toLowerCase();const item
  const btn=document.createElement('button');btn.className='select';btn.textContent='▶ LISTEN';btn.addEventListener('click',()=>select(t,true));
  const fav=document.createElement('button');fav.textContent=favs.has(t.id)?'★ SAVED':'☆ SAVE';fav.setAttribute('aria-label',(favs.has(t.id)?'Unsave ':'Save ')+t.title);fav.addEventListener('click',()=>{favs.has(t.id)?favs.delete(t.id):favs.add(t.id);save();render()});
  actions.append(btn,fav);card.append(label,h,artist,tags,actions);$('cards').append(card);});}
-async function select(t,fromClick){current=t;render();$('now-title').textContent=t.title;$('now-artist').textContent=t.artist+' · '+t.genre;$('source').href=filePage(t);$('source').hidden=false;
- $('audio').pause();$('audio').removeAttribute('src');$('audio').load();$('playing-status').textContent='Finding the Wikimedia audio file…';$('answer-text').textContent='';const token=++selectToken;
- try{
- const api=new URL('https://commons.wikimedia.org/w/api.php');api.searchParams.set('action','query');api.searchParams.set('format','json');api.searchParams.set('origin','*');api.searchParams.set('prop','imageinfo');api.searchParams.set('iiprop','url|mime');api.searchParams.set('titles','File:'+t.filename);
- const response=await fetch(api,{mode:'cors'});if(!response.ok)throw Error('Source lookup unavailable');
- const result=await response.json();if(token!==selectToken)return;
- const page=Object.values(result.query?.pages||{})[0];const info=page?.imageinfo?.[0];
- if(!info?.url||!String(info.mime||'').startsWith('audio/'))throw Error('Recording file unavailable');
- $('audio').src=info.url;$('audio').load();$('playing-status').textContent='Ready. Press ▶ in the audio player to listen.';
- if(fromClick){try{await $('audio').play();$('playing-status').textContent='Playing · '+t.focus}catch{$('playing-status').textContent='Ready. Press ▶ in the audio player to listen.'}}
- }catch(error){if(token!==selectToken)return;$('playing-status').textContent='Could not load the audio here. Open the recording source link below.'}
+function select(t,fromClick){
+ current=t;render();
+ $('now-title').textContent=t.title;
+ $('now-artist').textContent=t.artist+' · '+t.genre;
+ $('source').href=filePage(t);$('source').hidden=false;
+ $('audio').pause();
+ // Commons redirects straight to the recording. This avoids API fetch/CORS
+ // restrictions on school networks and browsers.
+ const redirect='https://commons.wikimedia.org/wiki/Special:Redirect/file/'+encodeURIComponent(t.filename.replace(/ /g,'_'));
+ $('audio').src=redirect;
+ $('audio').load();
+ $('playing-status').textContent='Loading recording…';
+ $('answer-text').textContent='';
+ if(fromClick){
+   $('audio').play().then(()=>{$('playing-status').textContent='Playing · '+t.focus})
+     .catch(()=>{$('playing-status').textContent='Press ▶ to play. If blocked by your network, open the source below.'});
+ }else{$('playing-status').textContent='Press ▶ to listen.';}
  if(window.innerWidth<920)$('now-title').scrollIntoView({behavior:'smooth',block:'center'});
 }
 $('audio').addEventListener('error',()=>{if(current)$('playing-status').textContent='This recording could not play in your browser. Open its source link below.';});
