@@ -25,6 +25,9 @@
 @keyframes seats-pop{from{transform:scale(.68);opacity:.25}to{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.seats-panel{animation:none}}
 .seasonal-link{display:inline-flex;align-items:center;justify-content:center;text-align:center;background:var(--yellow);color:#11172f;text-decoration:none;border:3px solid white;padding:13px 16px;font:10px/1.7 'Press Start 2P',monospace;box-shadow:4px 4px 0 #080e20;min-height:54px}.seasonal-link:hover,.seasonal-link:focus-visible{background:var(--cyan);outline:2px solid white}
+/* Keep full-screen classroom signals above the shared clock. */
+body #dbclock-chip, body #dbclock-menu, body #dbclock-box {z-index:8}
+html body.dbclock-three-minute-pulse::after {z-index:7}
 </style></head>
 <body><main class="wrap"><a class="back" href="./">← BAND TOOLS</a><header><div class="eyebrow">07 / General Music · Teacher Hub</div><div class="heading-row"><h1>General Music</h1><button type="button" id="assigned-seats-btn">BACK TO ASSIGNED SEATS</button></div><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
 <section class="grid">
@@ -121,4 +124,6 @@ signal.addEventListener('click',e=>{if(e.target===signal)closeStop()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&signal.classList.contains('show'))closeStop()});
 const qs=['Is the music fast or slow?','Is the music loud or quiet?','What instrument do you hear?','Does the music sound happy, sad, or mysterious?','Is there a steady beat?','Did the music change? What changed?','Would this music fit an action scene or a quiet scene?'];let qi=0;document.getElementById('next').onclick=()=>{qi=(qi+1)%qs.length;document.getElementById('question').textContent=qs[qi]};
 let seconds=300,initial=300,running=false,handle;const display=()=>{document.getElementById('time').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')};document.querySelectorAll('[data-min]').forEach(b=>b.onclick=()=>{clearInterval(handle);running=false;seconds=initial=Number(b.dataset.min)*60;display()});document.getElementById('start').onclick=()=>{if(running)return;running=true;handle=setInterval(()=>{if(seconds>0){seconds--;display()}else{clearInterval(handle);running=false}},1000)};document.getElementById('reset').onclick=()=>{clearInterval(handle);running=false;seconds=initial;display()};
-</script></body></html>
+</script>
+<script src="class-clock.js?v=20261112-general-music" data-clock-only></script>
+</body></html>

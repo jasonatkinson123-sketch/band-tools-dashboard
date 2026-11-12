@@ -2,6 +2,7 @@
   "use strict";
 
   const VERSION = "2026.10.19.1";
+  const clockOnly = document.currentScript?.hasAttribute("data-clock-only");
   const TZ = "America/New_York";
   const STORAGE_KEY = "derby-band-clock-mode-v1";
   const DOOR_STORAGE_KEY = "derby-band-door-keeper-v1";
@@ -527,11 +528,14 @@
         <button type="button" data-dbclock-mode="early">EARLY</button>
         <button type="button" data-dbclock-mode="delay">2-HR DELAY</button>
         <button type="button" data-dbclock-mode="off">OFF TODAY</button>
-        <button id="dbdoor-preview" type="button">TEST DOOR KEEPER</button>
+        ${clockOnly ? "" : '<button id="dbdoor-preview" type="button">TEST DOOR KEEPER</button>'}
       </div>
       <button id="dbclock-preview" type="button">PREVIEW COUNTDOWN</button>
       <p id="dbclock-menu-note">Early-dismissal dates switch automatically. Use 2-HR DELAY on weather-delay days; the override resets tomorrow.</p>
     `;
+
+    document.body.append(box, chip, menu);
+    if (clockOnly) return;
 
     const doorChip = document.createElement("div");
     doorChip.id = "dbdoor-chip";
@@ -632,7 +636,7 @@
       <button id="dbcash-undo" type="button" hidden>UNDO LAST AWARD</button>
     `;
 
-    document.body.append(box, chip, menu, doorChip, doorModal, doorFireworks, fancyChip, fancyPanel, cashChip, cashPanel, requestChip);
+    document.body.append(doorChip, doorModal, doorFireworks, fancyChip, fancyPanel, cashChip, cashPanel, requestChip);
   }
 
   let dismissedSlotKey = "";
@@ -1256,9 +1260,11 @@
     const actual = resolvedMode(now.date, requested);
     const schedule = scheduleFor(now.date, now.weekday, requested);
     renderMenuState(now.date, requested);
-    renderDoorReminder(now.date, now.weekday, requested, actual, now.seconds);
-    renderRewardRequestChip();
-    if (!refs().cashPanel.hidden) renderCashContext();
+    if (!clockOnly) {
+      renderDoorReminder(now.date, now.weekday, requested, actual, now.seconds);
+      renderRewardRequestChip();
+      if (!refs().cashPanel.hidden) renderCashContext();
+    }
 
     if (previewActive) {
       const elapsed = (Date.now() - previewStartedAt) / 1000;
@@ -1329,6 +1335,8 @@
       r.chip.setAttribute("aria-expanded", "false");
       tick();
     });
+
+    if (clockOnly) return;
 
     r.doorPreview.addEventListener("click", () => {
       r.menu.hidden = true;
@@ -1445,11 +1453,13 @@
     buildUI();
     bind();
     tick();
-    renderCashContext();
-    renderFancy();
-    pollRewardRequests();
     window.setInterval(tick, 250);
-    window.setInterval(pollRewardRequests, REQUEST_POLL_MS);
+    if (!clockOnly) {
+      renderCashContext();
+      renderFancy();
+      pollRewardRequests();
+      window.setInterval(pollRewardRequests, REQUEST_POLL_MS);
+    }
     window.DerbyBandClock = {
       version: VERSION,
       preview() {
@@ -1465,9 +1475,11 @@
         tick();
         return true;
       },
-      previewDoorKeeper() {
-        openDoorKeeper(true);
-      }
+      ...(!clockOnly && {
+        previewDoorKeeper() {
+          openDoorKeeper(true);
+        }
+      })
     };
   }
 
