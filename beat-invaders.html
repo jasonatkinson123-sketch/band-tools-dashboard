@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beat Invaders · Music Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; --bg:#090d22; --panel:#1b2148; --cyan:#65e8ed; --yellow:#ffd447; --pink:#ff8eb5; --ink:#121632; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(ellipse at 50% 0%,#402764,transparent 70%),var(--bg); color:white; font:24px/1.3 'VT323',monospace; }
+  main { max-width:970px; margin:auto; padding:clamp(14px,3vw,30px); }
+  a,button { color:inherit; font:inherit; touch-action:manipulation; }
+  button { cursor:pointer; }
+  a:focus-visible,button:focus-visible { outline:3px solid white; outline-offset:4px; }
+  button:disabled { cursor:default; }
+  .back { display:inline-block; color:var(--cyan); padding:10px 13px; border:2px solid currentColor; text-decoration:none; }
+  header { margin:16px 0; border:4px solid var(--yellow); background:#19183d; text-align:center; padding:14px; box-shadow:6px 6px #050817; }
+  h1 { margin:6px 0 12px; color:var(--yellow); font:clamp(18px,4.5vw,38px)/1.45 'Press Start 2P',monospace; text-shadow:3px 3px #9c2864; }
+  p { margin:0; }
+  .hud,.controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 18px; }
+  .hud { margin:18px 0 10px; color:var(--cyan); }
+  .controls button { min-height:48px; padding:6px 14px; border:2px solid var(--cyan); background:var(--panel); }
+  .controls button:disabled { opacity:.65; }
+  #listen { color:var(--ink); background:var(--yellow); border-color:var(--yellow); }
+  #visual[aria-pressed="true"] { color:var(--ink); background:var(--cyan); }
+  .pulse-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; width:min(300px,90%); margin:12px auto 8px; }
+  .pulse-strip .beat { border-color:#7291ad; background:#101635; }
+  .pulse-strip .beat.current { border-color:var(--cyan); }
+  .pulse-strip .beat.hit { background:var(--cyan); color:var(--ink); }
+  #status { text-align:center; min-height:2.6em; padding:3px 0 8px; }
+  .options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(8px,2vw,16px); }
+  .option { --alien:var(--cyan); display:grid; justify-items:center; gap:8px; width:100%; min-height:122px; padding:10px 6px; border:3px solid var(--alien); background:var(--panel); box-shadow:4px 4px #050817; }
+  .option:nth-child(2) { --alien:var(--pink); }
+  .option:nth-child(3) { --alien:var(--yellow); }
+  .option:not(:disabled):hover,.option.correct { background:#304671; }
+  .option.missed { opacity:.72; }
+  .alien { width:48px; height:36px; background:var(--alien); clip-path:polygon(0 44%,13% 44%,13% 28%,26% 28%,26% 10%,39% 10%,39% 28%,61% 28%,61% 10%,74% 10%,74% 28%,87% 28%,87% 44%,100% 44%,100% 85%,87% 85%,87% 71%,75% 71%,75% 97%,60% 97%,60% 85%,40% 85%,40% 97%,25% 97%,25% 71%,13% 71%,13% 85%,0 85%); position:relative; }
+  .alien::after { content:""; position:absolute; inset:46% auto auto 25%; width:13%; height:14%; background:var(--panel); box-shadow:18px 0 var(--panel); }
+  .pattern { display:grid; grid-template-columns:repeat(4,1fr); width:100%; gap:4px; }
+  .beat { display:grid; place-items:center; min-height:35px; border:1px solid #7c89ac; background:#0e1534; color:white; font:700 clamp(13px,3.2vw,25px)/1 system-ui,sans-serif; white-space:nowrap; }
+  .letter { color:var(--alien); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="arcade.html">← Music Arcade</a>
+  <header><h1>Beat Invaders</h1><p>Listen to four beats. Pick the alien with the matching rhythm.</p></header>
+  <div class="hud"><span id="round"></span><span id="score"></span></div>
+  <div class="controls">
+    <button id="listen" type="button">▶ Play rhythm</button>
+    <button id="visual" type="button" aria-pressed="false">Show hits</button>
+    <button id="next" type="button" hidden>Next round →</button>
+  </div>
+  <div class="pulse-strip" aria-hidden="true">
+    <span class="beat"></span><span class="beat"></span><span class="beat"></span><span class="beat"></span>
+  </div>
+  <p id="status" role="status">● = one hit &nbsp; ●● = two quick hits</p>
+  <div id="options" class="options" role="group" aria-label="Rhythm choices"></div>
+</main>
+<script>
+  const sets = [
+    ['1112','1121','1211'],
+    ['2111','2211','2121'],
+    ['1122','1212','1221'],
+    ['1222','2122','2212'],
+    ['2211','2112','1122'],
+    ['1212','2121','2221'],
+  ];
+  const beatSeconds = 0.56;
+  const symbols = {1:'●', 2:'●●'};
+  const descriptions = {1:'one hit', 2:'two hits'};
+  const letters = ['A','B','C'];
+  const listen = document.querySelector('#listen');
+  const visual = document.querySelector('#visual');
+  const next = document.querySelector('#next');
+  const status = document.querySelector('#status');
+  const options = document.querySelector('#options');
+  const pulse = [...document.querySelectorAll('.pulse-strip .beat')];
+  let audio;
+  let round = 0;
+  let score = 0;
+  let target;
+  let phase;
+  let missed;
+
+  function loadRound() {
+    const patterns = sets[round];
+    target = patterns[Math.floor(Math.random() * patterns.length)];
+    phase = 'ready';
+    missed = false;
+    document.querySelector('#round').textContent = 'Round ' + (round + 1) + ' / ' + sets.length;
+    document.querySelector('#score').textContent = 'Score ' + score;
+    status.textContent = '● = one hit · ●● = two quick hits';
+    listen.textContent = '▶ Play rhythm';
+    next.hidden = true;
+    pulse.forEach(cell => { cell.textContent = ''; cell.className = 'beat'; });
+    options.replaceChildren();
+    patterns.forEach((pattern, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'option';
+      button.disabled = true;
+      button.setAttribute('aria-label', 'Alien ' + letters[index] + ': ' + [...pattern].map(hit => descriptions[hit]).join(', '));
+      const cells = [...pattern].map(hit => '<span class="beat">' + symbols[hit] + '</span>').join('');
+      button.innerHTML = '<span class="alien" aria-hidden="true"></span><span class="letter">' +
+        letters[index] + '</span><span class="pattern" aria-hidden="true">' + cells + '</span>';
+      button.addEventListener('click', () => choose(pattern, button));
+      options.append(button);
+    });
+  }
+
+  function playHit(time) {
+    const oscillator = audio.createOscillator();
+    const volume = audio.createGain();
+    oscillator.frequency.value = 370;
+    volume.gain.setValueAtTime(0.0001, time);
+    volume.gain.exponentialRampToValueAtTime(0.22, time + 0.008);
+    volume.gain.exponentialRampToValueAtTime(0.0001, time + 0.105);
+    oscillator.connect(volume).connect(audio.destination);
+    oscillator.start(time);
+    oscillator.stop(time + 0.11);
+  }
+
+  async function playRhythm() {
+    const previous = phase;
+    phase = 'playing';
+    listen.disabled = true;
+    visual.disabled = true;
+    next.disabled = true;
+    const buttons = [...options.querySelectorAll('button')];
+    const enabled = buttons.map(button => !button.disabled);
+    buttons.forEach(button => { button.disabled = true; });
+    pulse.forEach(cell => { cell.textContent = ''; cell.className = 'beat'; });
+
+    let showHits = visual.getAttribute('aria-pressed') === 'true';
+    try {
+      const AudioEngine = window.AudioContext || window.webkitAudioContext;
+      audio ??= new AudioEngine();
+      if (audio.state !== 'running') await audio.resume();
+    } catch {
+      audio = null;
+      showHits = true;
+    }
+    status.textContent = audio ? 'Listen…' : 'Watch the rhythm…';
+    const start = audio ? audio.currentTime + 0.09 : 0;
+    [...target].forEach((hitCount, beat) => {
+      const offset = beat * beatSeconds;
+      if (audio) {
+        playHit(start + offset);
+        if (hitCount === '2') playHit(start + offset + beatSeconds / 2);
+      }
+      setTimeout(() => {
+        pulse.forEach(cell => cell.classList.remove('current','hit'));
+        pulse[beat].classList.add('current');
+        if (showHits) {
+          pulse[beat].textContent = symbols[hitCount];
+          pulse[beat].classList.add('hit');
+        }
+      }, 90 + offset * 1000);
+    });
+
+    setTimeout(() => {
+      pulse.forEach(cell => cell.classList.remove('current','hit'));
+      phase = previous === 'ready' ? 'answer' : previous;
+      if (phase === 'answer') status.textContent = 'Which alien matches?';
+      else showMatch();
+      buttons.forEach((button, index) => {
+        button.disabled = previous === 'ready' ? false : !enabled[index];
+      });
+      listen.disabled = false;
+      visual.disabled = false;
+      next.disabled = false;
+      listen.textContent = '↻ Replay rhythm';
+      if (document.activeElement === document.body) {
+        (buttons.find(button => !button.disabled) ?? next).focus();
+      }
+    }, 90 + 4 * beatSeconds * 1000);
+  }
+
+  function choose(pattern, button) {
+    if (phase !== 'answer') return;
+    if (pattern !== target) {
+      missed = true;
+      button.classList.add('missed');
+      button.disabled = true;
+      status.textContent = 'Try another alien. You can replay the rhythm.';
+      options.querySelector('button:not(:disabled)').focus();
+      return;
+    }
+    phase = 'complete';
+    if (!missed) score += 1;
+    button.classList.add('correct');
+    options.querySelectorAll('button').forEach(option => { option.disabled = true; });
+    document.querySelector('#score').textContent = 'Score ' + score;
+    showMatch();
+    next.textContent = round === sets.length - 1 ? 'Play again' : 'Next round →';
+    next.hidden = false;
+    next.focus();
+  }
+
+  function showMatch() {
+    status.textContent = round === sets.length - 1
+      ? 'Finished! First-try matches: ' + score + ' of ' + sets.length + '.'
+      : 'That’s the match!';
+  }
+
+  listen.addEventListener('click', playRhythm);
+  visual.addEventListener('click', () => {
+    visual.setAttribute('aria-pressed', String(visual.getAttribute('aria-pressed') === 'false'));
+    pulse.forEach(cell => { cell.textContent = ''; });
+  });
+  next.addEventListener('click', () => {
+    round = (round + 1) % sets.length;
+    if (round === 0) score = 0;
+    loadRound();
+    listen.focus();
+  });
+  loadRound();
+</script>
+</body>
+</html>
