@@ -28,8 +28,21 @@
 /* Keep full-screen classroom signals above the shared clock. */
 body #dbclock-chip, body #dbclock-menu, body #dbclock-box {z-index:8}
 html body.dbclock-three-minute-pulse::after {z-index:7}
+.page-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.wall-clock{border-left:5px solid var(--pink);padding-left:12px;text-align:right;flex:none;text-transform:uppercase}
+.wall-clock p{margin:0;color:#fff;font-size:clamp(17px,3vw,25px);letter-spacing:.05em}
+.wall-clock #clock-weekday{color:var(--yellow);font:clamp(8px,1.4vw,11px)/1.5 'Press Start 2P',monospace}
+.wall-clock #clock-time{color:var(--cyan);font:clamp(10px,1.7vw,14px)/1.5 'Press Start 2P',monospace}
+body #dbclock-box{top:max(112px,calc(env(safe-area-inset-top) + 96px))}
 </style></head>
-<body><main class="wrap"><a class="back" href="./">← BAND TOOLS</a><header><div class="eyebrow">07 / General Music · Teacher Hub</div><div class="heading-row"><h1>General Music</h1><button type="button" id="assigned-seats-btn">BACK TO ASSIGNED SEATS</button></div><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
+<body><main class="wrap"><div class="page-top">
+<a class="back" href="./">← BAND TOOLS</a>
+<div class="wall-clock" role="group" aria-label="Classroom date and time">
+  <p id="clock-weekday"></p>
+  <p id="clock-date"></p>
+  <p id="clock-time">--:--</p>
+</div>
+</div><header><div class="eyebrow">07 / General Music · Teacher Hub</div><div class="heading-row"><h1>General Music</h1><button type="button" id="assigned-seats-btn">BACK TO ASSIGNED SEATS</button></div><p>A simple home base for a predictable daily class. Starter tools now; activities and lessons can be added as the course takes shape.</p></header>
 <section class="grid">
 <div class="card wide"><div class="tag">01 / EVERY DAY</div><h2>Today's Routine</h2><div class="schedule"><div class="step"><span>01</span>ARRIVE</div><div class="step"><span>02</span>LISTEN</div><div class="step"><span>03</span>MAKE MUSIC</div><div class="step"><span>04</span>FINISH</div></div><p>Keep the sequence consistent. Change the music, not the routine.</p></div>
 <div class="card"><div class="tag">02 / CLASSROOM</div><h2>Stop & Listen</h2><p>Full-screen stop signal with a chime and British voice. Trigger it whenever you need the class’s attention.</p><button type="button" id="stop">🔊 STOP &amp; LISTEN</button></div>
@@ -126,4 +139,28 @@ const qs=['Is the music fast or slow?','Is the music loud or quiet?','What instr
 let seconds=300,initial=300,running=false,handle;const display=()=>{document.getElementById('time').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')};document.querySelectorAll('[data-min]').forEach(b=>b.onclick=()=>{clearInterval(handle);running=false;seconds=initial=Number(b.dataset.min)*60;display()});document.getElementById('start').onclick=()=>{if(running)return;running=true;handle=setInterval(()=>{if(seconds>0){seconds--;display()}else{clearInterval(handle);running=false}},1000)};document.getElementById('reset').onclick=()=>{clearInterval(handle);running=false;seconds=initial;display()};
 </script>
 <script src="class-clock.js?v=20261112-general-music" data-clock-only></script>
+<script>
+(() => {
+  const timeZone = 'America/New_York';
+  const weekday = new Intl.DateTimeFormat('en-US', {timeZone, weekday: 'long'});
+  const date = new Intl.DateTimeFormat('en-US', {timeZone, month: 'long', day: 'numeric'});
+  const time = new Intl.DateTimeFormat('en-US', {timeZone, hour: 'numeric', minute: '2-digit', hour12: true});
+  const fields = [
+    [document.getElementById('clock-weekday'), now => weekday.format(now)],
+    [document.getElementById('clock-date'), now => date.format(now)],
+    [document.getElementById('clock-time'), now => time.format(now).replace(/\s?[AP]M$/, '')]
+  ];
+
+  function updateClassroomClock() {
+    const now = new Date();
+    for (const [element, format] of fields) {
+      const value = format(now);
+      if (element.textContent !== value) element.textContent = value;
+    }
+  }
+
+  updateClassroomClock();
+  setInterval(updateClassroomClock, 1000);
+})();
+</script>
 </body></html>
