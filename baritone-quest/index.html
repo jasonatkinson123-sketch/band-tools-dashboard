@@ -507,7 +507,7 @@ function stopMic(){
   $("micLed").classList.remove("live");$("micStatus").textContent="Microphone is off";
   $("micBtn").textContent="🎤 START LISTENING";$("levelFill").style.width="0%";$("calibrateBtn").disabled=true;
   $("calibrationInfo").textContent="Room noise: not measured yet";
-  setSignal("","○ Microphone off","Press Start Listening to measure the room before playing.");
+  setSignal("off","○ Microphone off","Press Start Listening to measure the room before playing.");
 }
 async function hear(){
   if(state.calibrating)return;
