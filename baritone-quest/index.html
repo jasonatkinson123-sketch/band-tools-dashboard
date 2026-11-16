@@ -149,7 +149,7 @@ var ORDER=["Bb2","C3","D3","Eb3","F3"];
 var PATTERN=["F3","Eb3","D3"];
 var SONG=["F3","Eb3","D3","F3","Eb3","D3","D3","D3","D3","D3","Eb3","Eb3","Eb3","Eb3","F3","Eb3","D3"];
 var STORAGE_KEY="derby-baritone-quest-v1";
-var state={mode:"warmup",index:0,listening:false,micStream:null,audio:null,analyser:null,buffer:null,animation:0,lastAnalyzed:0,lastMatched:0,matchSince:0,lastAward:null,quietSince:0,readyForRepeat:true,locked:false,popupTimer:0,ignoreUntil:0};
+var state={mode:"warmup",index:0,reviewing:false,reviewed:[],listening:false,micStream:null,audio:null,analyser:null,buffer:null,animation:0,lastAnalyzed:0,lastMatched:0,matchSince:0,lastAward:null,quietSince:0,readyForRepeat:true,locked:false,popupTimer:0,ignoreUntil:0};
 var saved={warmup:false,mastered:[],pattern:false,song:false};
 try { var incoming=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(incoming&&typeof incoming==="object"){saved.warmup=!!incoming.warmup;saved.mastered=Array.isArray(incoming.mastered)?incoming.mastered.filter(function(x){return ORDER.includes(x)}):[];saved.pattern=!!incoming.pattern;saved.song=!!incoming.song;} } catch(e){}
 var $=function(id){return document.getElementById(id)};
@@ -158,7 +158,7 @@ var modeNames={warmup:"LEVEL 1 · MAKE A SOUND",notes:"LEVEL 2 · NOTE EXPLORER"
 function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));}catch(e){}}
 function currentSequence(){if(state.mode==="pattern")return PATTERN;if(state.mode==="song")return SONG;return null;}
 function currentKey(){if(state.mode==="warmup")return null;if(state.mode==="notes")return ORDER[state.index];var seq=currentSequence();return seq?seq[state.index]:null;}
-function complete(){return state.mode==="warmup"?saved.warmup:state.mode==="notes"?saved.mastered.length===ORDER.length:state.mode==="pattern"?saved.pattern:saved.song;}
+function complete(){if(state.reviewing){if(state.mode==="warmup")return state.index>=1;if(state.mode==="notes")return state.reviewed.length===5;return state.index>=currentSequence().length;}return state.mode==="warmup"?saved.warmup:state.mode==="notes"?saved.mastered.length===ORDER.length:state.mode==="pattern"?saved.pattern:saved.song;}
 function setMessage(title,line,good){if($("feedTitle").textContent===title&&$("feedLine").textContent===line&&$("feedback").classList.contains("good")===!!good)return;$("feedTitle").textContent=title;$("feedLine").textContent=line;$("feedIcon").textContent=good?"✓":"♪";$("feedback").classList.toggle("good",!!good);$("feedback").classList.toggle("success-pop",!!good);}
 function buildStaff(key){
   var note=key?NOTES[key]:null;
@@ -201,24 +201,24 @@ function updateProgress(){
 }
 function render(){
   updateProgress();
-  var key=currentKey(),note=key?NOTES[key]:null,seq=currentSequence(),isDone=complete()&&!((state.mode==="notes")&&saved.mastered.length!==ORDER.length);
+  var key=currentKey(),note=key?NOTES[key]:null,seq=currentSequence(),isDone=complete(),noteCount=state.reviewing?state.reviewed.length:saved.mastered.length;
   $("modeLabel").textContent=modeNames[state.mode];
   if(state.mode==="warmup"){
-    $("prompt").textContent=saved.warmup?"Great! You made a sound.":"Play any comfortable note.";
+    $("prompt").textContent=isDone?"Great! You made a sound.":"Play any comfortable note.";
     $("help").textContent="Any clear, held euphonium note counts. Find a note that feels easy.";
-    $("counter").textContent=saved.warmup?"COMPLETE ✓":"FIRST STEP";
+    $("counter").textContent=isDone?"COMPLETE ✓":"FIRST STEP";
   }else if(state.mode==="notes"){
-    $("prompt").textContent=saved.mastered.length===ORDER.length?"All five notes!":("Find the "+note.label+".");
-    $("help").textContent=saved.mastered.length===ORDER.length?"You earned five stars. Try the three-note melody next.":"Look at the note and fingering. Play it gently and hold it steady.";
-    $("counter").textContent=saved.mastered.length+"/5 FOUND";
+    $("prompt").textContent=isDone?"All five notes!":("Find the "+note.label+".");
+    $("help").textContent=isDone?"You earned five stars. Try the three-note melody next.":"Look at the note and fingering. Play it gently and hold it steady.";
+    $("counter").textContent=noteCount+"/5 FOUND";
   }else if(state.mode==="pattern"){
-    $("prompt").textContent=saved.pattern?"Little Melody complete!":"Play the three-note melody.";
+    $("prompt").textContent=isDone?"Little Melody complete!":"Play the three-note melody.";
     $("help").textContent="Play each note in order. The next note appears as you succeed.";
-    $("counter").textContent=(saved.pattern?3:state.index)+"/3 NOTES";
+    $("counter").textContent=(isDone?3:state.index)+"/3 NOTES";
   }else{
-    $("prompt").textContent=saved.song?"You played Hot Cross Buns!":"Play Hot Cross Buns.";
+    $("prompt").textContent=isDone?"You played Hot Cross Buns!":"Play Hot Cross Buns.";
     $("help").textContent="There's no tempo to chase. Stop briefly between repeated notes.";
-    $("counter").textContent=(saved.song?SONG.length:state.index)+"/"+SONG.length+" NOTES";
+    $("counter").textContent=(isDone?SONG.length:state.index)+"/"+SONG.length+" NOTES";
   }
   buildStaff(isDone?null:key);
   $("noteLabel").textContent=isDone?"★ NICE WORK":note?note.label:"ANY NOTE";
@@ -234,7 +234,7 @@ function render(){
   }else $("songstrip").innerHTML="";
 }
 function pickUnmastered(after){
-  for(var step=0;step<ORDER.length;step++){var i=(after+step)%ORDER.length;if(!saved.mastered.includes(ORDER[i]))return i;}
+  for(var step=0;step<ORDER.length;step++){var i=(after+step)%ORDER.length;if(!(state.reviewing?state.reviewed:saved.mastered).includes(ORDER[i]))return i;}
   return 0;
 }
 function setMode(mode,restart){
@@ -242,13 +242,9 @@ function setMode(mode,restart){
   if(mode==="song"&&!saved.pattern)return;
   clearTimeout(state.popupTimer);state.locked=false;state.matchSince=0;state.lastMatched=0;state.lastAward=null;state.readyForRepeat=true;
   state.mode=mode;state.index=0;
-  if(mode==="notes"&&saved.mastered.length<5)state.index=pickUnmastered(0);
-  if(restart){
-    if(mode==="warmup")saved.warmup=false;
-    if(mode==="pattern")saved.pattern=false;
-    if(mode==="song")saved.song=false;
-    save();
-  }
+  state.reviewing=!!restart||(mode==="warmup"&&saved.warmup)||(mode==="notes"&&saved.mastered.length===5)||(mode==="pattern"&&saved.pattern)||(mode==="song"&&saved.song);
+  state.reviewed=[];
+  if(mode==="notes")state.index=pickUnmastered(0);
   render();
   setMessage(complete()?"Nice work!":"You can do this.",complete()?"Choose another level, or practice again.":state.listening?"Play when you feel ready.":"Turn on the microphone when you're ready.",complete());
 }
@@ -258,8 +254,8 @@ function award(){
   state.readyForRepeat=false;
   state.lastAward=currentKey();
   var mode=state.mode;
-  if(mode==="warmup"){saved.warmup=true;}
-  if(mode==="notes"){var key=ORDER[state.index];if(!saved.mastered.includes(key))saved.mastered.push(key);}
+  if(mode==="warmup"){saved.warmup=true;state.index=1;}
+  if(mode==="notes"){var key=ORDER[state.index];var bucket=state.reviewing?state.reviewed:saved.mastered;if(!bucket.includes(key))bucket.push(key);}
   if(mode==="pattern"){state.index++;if(state.index>=PATTERN.length)saved.pattern=true;}
   if(mode==="song"){state.index++;if(state.index>=SONG.length)saved.song=true;}
   save();render();
@@ -433,7 +429,7 @@ if(new URLSearchParams(location.search).has("demo")){
   $("demoBtn").hidden=false;$("demoBtn").addEventListener("click",function(){award();});
 }
 window.addEventListener("pagehide",stopMic);
-render();setMessage("You can do this.","When you're ready, turn on the microphone.",false);
+state.reviewing=!!saved.warmup;render();setMessage("You can do this.","When you're ready, turn on the microphone.",false);
 })();
 </script>
 </body>
