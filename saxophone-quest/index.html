@@ -86,6 +86,19 @@ details p{margin:10px 0}
 .key-dot{height:24px;width:30px;border:2px solid #29454b;border-radius:50%;background:white}
 .key-dot.down{background:var(--purple);box-shadow:inset 0 4px 0 #0d5359}
 @media(max-width:460px){.valves{gap:9px}.key-dot{height:20px;width:26px}.note-label{font-size:2.5rem}}
+
+.smart-mic{border:2px solid #7880a4;border-radius:8px;background:#1e2541;padding:15px;margin-top:12px}
+.smart-mic .small{margin:8px 0;color:#e7e8f4}
+.smart-title{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.smart-title b{font-size:.78rem;letter-spacing:.08em;color:var(--yellow)}
+.calibrate-btn{color:#141629;background:#f4f2f9;font-weight:900;font-size:.76rem;padding:8px 9px;border:2px solid #bcc9e5}
+.calibrate-btn:disabled{opacity:.5}
+.signal-status{font-size:1rem;font-weight:900;margin:14px 0 5px;padding:7px 10px;border-radius:4px;border:1px solid #8690b6;background:#38415e;color:#f8faff}
+.signal-status.good{background:#1c634b;border-color:#53bd93;color:white}
+.signal-status.warn{background:#6b4b17;border-color:#f3c66d;color:white}
+.signal-status.bad{background:#863838;border-color:#f1a19c;color:white}
+.signal-status.calibrating{background:#225971;border-color:#79bce1}
+
 </style>
 </head>
 <body>
@@ -134,7 +147,14 @@ details p{margin:10px 0}
       <p class="small muted">Choose your saxophone above, then play into your Chromebook microphone in a fairly quiet room. Hold each note steady for a moment. For repeated notes, stop briefly between them.</p>
       <div class="divider"></div>
       <div class="micstatus"><span class="mic-led" id="micLed"></span><span id="micStatus">Microphone is off</span></div>
-      <div class="level" title="Microphone input level"><span id="levelFill"></span></div>
+      <div class="level" title="Relative input level (not a clipping indicator)"><span id="levelFill"></span></div>
+      <section class="smart-mic" aria-label="Smart microphone">
+        <div class="smart-title"><b>● SMART MICROPHONE · ON</b><button type="button" class="calibrate-btn" id="calibrateBtn" disabled>↻ RECHECK ROOM</button></div>
+        <div id="signalStatus" class="signal-status" role="status" aria-live="polite">○ Microphone off</div>
+        <p class="small" id="signalDetail">Press Start Listening. The game will measure the room for four seconds while you stay quiet.</p>
+        <p class="small" id="calibrationInfo">Room noise: not measured yet</p>
+      </section>
+
       <p class="small muted" id="privacy">Your sound is analyzed on this Chromebook. It is not recorded or uploaded.</p>
       <div class="divider"></div>
       <div class="section-top"><b>PROGRESS</b><span id="progressText">0 / 5 notes</span></div>
@@ -169,7 +189,7 @@ var SONG=["B4","A4","G4","B4","A4","G4","G4","G4","G4","G4","A4","A4","A4","A4",
 var TRANSPOSITION={alto:-9,tenor:-14,baritone:-21,soprano:-2};
 var STORAGE_BASE="derby-saxophone-quest-v1-";
 var STORAGE_KEY=STORAGE_BASE+"alto";
-var state={instrument:"alto",mode:"warmup",index:0,reviewing:false,reviewed:[],listening:false,micStream:null,audio:null,analyser:null,buffer:null,animation:0,lastAnalyzed:0,lastMatched:0,matchSince:0,lastAward:null,quietSince:0,readyForRepeat:true,locked:false,popupTimer:0,ignoreUntil:0};
+var state={calibrating:false,calibrationEnds:0,calibrationSamples:[],noiseFloor:.008,instrument:"alto",mode:"warmup",index:0,reviewing:false,reviewed:[],listening:false,micStream:null,audio:null,analyser:null,buffer:null,animation:0,lastAnalyzed:0,lastMatched:0,matchSince:0,lastAward:null,quietSince:0,readyForRepeat:true,locked:false,popupTimer:0,ignoreUntil:0};
 function loadProgress(){
   var data={warmup:false,mastered:[],pattern:false,song:false};
   try{
@@ -360,6 +380,64 @@ function labelPitch(midi){
   var names=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
   return names[(midi%12+12)%12]+(Math.floor(midi/12)-1);
 }
+
+var SMART_CALIBRATION_MS=4000;
+function setSignal(kind,title,detail){
+  var el=$("signalStatus");
+  if(el.textContent!==title||!el.classList.contains(kind)){
+    el.className="signal-status "+kind;el.textContent=title;
+  }
+  if($("signalDetail").textContent!==detail)$("signalDetail").textContent=detail;
+}
+function startCalibration(){
+  if(!state.listening)return;
+  state.calibrating=true;
+  state.calibrationEnds=performance.now()+SMART_CALIBRATION_MS;
+  state.calibrationSamples=[];
+  state.matchSince=0;
+  state.readyForRepeat=true;
+  $("calibrateBtn").disabled=true;
+  setSignal("calibrating","◌ Measuring room sound…","Do not play for four seconds. The band outside may continue rehearsing.");
+  setMessage("Checking the room.","Keep your instrument quiet until the room check finishes.",false);
+}
+function finishCalibration(){
+  var samples=state.calibrationSamples.slice().sort(function(a,b){return a-b;});
+  // Median: one clap or impact cannot dominate a room baseline.
+  state.noiseFloor=samples.length?samples[Math.floor((samples.length-1)*0.5)]:.008;
+  state.noiseFloor=Math.max(.002,state.noiseFloor);
+  state.calibrating=false;
+  state.matchSince=0;
+  $("calibrateBtn").disabled=false;
+  $("calibrationInfo").textContent="Room noise (relative): "+state.noiseFloor.toFixed(3)+(state.noiseFloor>=.04?" · NOISY ROOM":" · measured");
+  if(state.noiseFloor>=.04){
+    setSignal("warn","⚠ ROOM IS LOUD","Band sound is audible. Face the Chromebook toward your instrument and away from the doorway; play closer to it.");
+    setMessage("Room is busy.","Your notes must stand out above the background to count.",false);
+  }else{
+    setSignal("good","✓ READY TO PLAY","The microphone is listening. Play one sustained note.");
+    setMessage("Ready when you are.","Play the note on the screen.",false);
+  }
+}
+function measureAudio(buffer){
+  var square=0,peak=0,nearRail=0;
+  for(var i=0;i<buffer.length;i++){
+    var a=Math.abs(buffer[i]);
+    square+=a*a;
+    if(a>peak)peak=a;
+    if(a>=.985)nearRail++;
+  }
+  var rms=Math.sqrt(square/buffer.length);
+  return {rms:rms,peak:peak,nearRail:nearRail,
+    clipped:(peak>=.999&&nearRail>=2)||(nearRail>buffer.length*.0025)};
+}
+function quietEnough(rms){return rms<Math.max(.008,state.noiseFloor*1.3);}
+function enoughAboveRoom(rms){return rms>=Math.max(.012,state.noiseFloor*1.95);}
+function displayLevel(rms,clipped){
+  // This is a relative signal meter, NOT a clipping meter. Red is set only
+  // when samples are actually near the digital limits.
+  $("levelFill").style.width=(clipped?100:Math.min(94,Math.sqrt(rms/.3)*100))+"%";
+  $("levelFill").style.background=clipped?"#fc7772":"var(--yellow)";
+}
+
 function observe(hz,timestamp){
   if(state.locked||complete())return;
   var target=currentKey();
@@ -374,7 +452,7 @@ function observe(hz,timestamp){
     }
     if(!state.matchSince)state.matchSince=timestamp;
     state.lastMatched=timestamp;
-    if(timestamp-state.matchSince>=260){award();}
+    if(timestamp-state.matchSince>=425){award();}
     else if(timestamp-state.matchSince>=100)setMessage("I hear it!","Hold that sound a little longer...",false);
   }else{
     state.matchSince=0;
@@ -384,32 +462,54 @@ function observe(hz,timestamp){
 function loop(now){
   if(!state.listening)return;
   state.animation=requestAnimationFrame(loop);
-  if(now-state.lastAnalyzed<75)return;
+  if(now-state.lastAnalyzed<85)return;
   state.lastAnalyzed=now;
-  if(now<state.ignoreUntil){state.matchSince=0;return;}
   if(!state.analyser||!state.buffer)return;
   state.analyser.getFloatTimeDomainData(state.buffer);
-  var square=0;for(var i=0;i<state.buffer.length;i++)square+=state.buffer[i]*state.buffer[i];
-  var rms=Math.sqrt(square/state.buffer.length);
-  $("levelFill").style.width=(Math.min(100,Math.max(0,rms*900)))+"%";
-  if(rms<.008){
-    if(!state.quietSince)state.quietSince=now;
-    if(now-state.quietSince>155)state.readyForRepeat=true;
+  var level=measureAudio(state.buffer);
+  displayLevel(level.rms,level.clipped);
+  if(state.calibrating){
+    state.calibrationSamples.push(level.rms);
+    var remain=Math.max(0,Math.ceil((state.calibrationEnds-now)/1000));
+    setSignal("calibrating","◌ Measuring room… "+remain+"s","Please stay quiet while the microphone learns the room sound.");
+    $("diagnostic").textContent="Calibrating · RMS "+level.rms.toFixed(3)+" · peak "+level.peak.toFixed(3);
+    if(now>=state.calibrationEnds)finishCalibration();
+    return;
+  }
+  if(now<state.ignoreUntil){state.matchSince=0;return;}
+  if(level.clipped){
     state.matchSince=0;
-    $("diagnostic").textContent="Pitch: — · Input: "+rms.toFixed(3);
+    setSignal("bad","✕ MIC CLIPPING","The audio signal may be distorted. Move the Chromebook farther from the bell, or lower Chromebook input volume.");
+    $("diagnostic").textContent="CLIP SUSPECTED · RMS "+level.rms.toFixed(3)+" · peak "+level.peak.toFixed(3)+" · near-rail samples "+level.nearRail;
+    return;
+  }
+  if(quietEnough(level.rms)){
+    if(!state.quietSince)state.quietSince=now;
+    if(now-state.quietSince>190)state.readyForRepeat=true;
+  }else state.quietSince=0;
+
+  var strong=enoughAboveRoom(level.rms);
+  if(!strong){
+    state.matchSince=0;
+    var noisy=state.noiseFloor>=.04;
+    setSignal(noisy?"warn":"good",noisy?"⚠ ROOM IS LOUD":"✓ READY TO PLAY",
+      noisy?"The band may be louder than this player's instrument. Move nearer the Chromebook and recheck the room if conditions change.":"Waiting for a note stronger than the room noise.");
+    $("diagnostic").textContent="Background / quiet · RMS "+level.rms.toFixed(3)+" · peak "+level.peak.toFixed(3)+" · baseline "+state.noiseFloor.toFixed(3);
+    return;
+  }
+
+  var pitch=detectPitch(state.buffer,state.audio.sampleRate);
+  if(!pitch||pitch.confidence<.82){
+    state.matchSince=0;
+    setSignal("warn","⚠ UNCLEAR PITCH","Several sounds may be overlapping. Try pointing the microphone toward your instrument.");
+    $("diagnostic").textContent="Pitch unclear · RMS "+level.rms.toFixed(3)+" · peak "+level.peak.toFixed(3)+" · baseline "+state.noiseFloor.toFixed(3)+" · confidence "+(pitch?pitch.confidence.toFixed(2):"—");
     return;
   }
   state.quietSince=0;
-  var pitch=detectPitch(state.buffer,state.audio.sampleRate);
-  if(!pitch||pitch.confidence<.74){
-    if(!state.quietSince)state.quietSince=now;
-    if(now-state.quietSince>155)state.readyForRepeat=true;
-    state.matchSince=0;
-    $("diagnostic").textContent="Pitch: unclear · Input: "+rms.toFixed(3);
-    return;
-  }
   var midi=Math.round(69+12*Math.log2(pitch.hz/440));
-  $("diagnostic").textContent="Heard concert "+labelPitch(midi)+" ("+pitch.hz.toFixed(1)+" Hz) · Expected "+(currentKey()?targetHz(currentKey()).toFixed(1)+" Hz":"any pitch")+" · Confidence: "+Math.round(pitch.confidence*100)+"% · Input: "+rms.toFixed(3);
+  var instrumentDiagnostic="Heard concert "+labelPitch(midi)+" ("+pitch.hz.toFixed(1)+" Hz) · expected "+(currentKey()?targetHz(currentKey()).toFixed(1)+" Hz":"any pitch");
+  setSignal("good","✓ GOOD SIGNAL","Clear, stable note detected above the room noise.");
+  $("diagnostic").textContent=instrumentDiagnostic+" · confidence "+Math.round(pitch.confidence*100)+"% · RMS "+level.rms.toFixed(3)+" · peak "+level.peak.toFixed(3)+" · baseline "+state.noiseFloor.toFixed(3);
   observe(pitch.hz,now);
 }
 async function startMic(){
@@ -428,10 +528,10 @@ async function startMic(){
     var source=context.createMediaStreamSource(stream),analyser=context.createAnalyser();
     analyser.fftSize=8192;analyser.smoothingTimeConstant=0;source.connect(analyser);
     state.analyser=analyser;state.buffer=new Float32Array(analyser.fftSize);
-    state.listening=true;state.lastAnalyzed=0;state.matchSince=0;
+    state.listening=true;state.lastAnalyzed=0;state.matchSince=0;state.noiseFloor=.008;
     $("micLed").classList.add("live");$("micStatus").textContent="Microphone is listening";
     $("micBtn").textContent="■ STOP LISTENING";
-    setMessage("Microphone is on.","Play when you feel ready.",false);
+    startCalibration();
     state.animation=requestAnimationFrame(loop);
   }catch(error){
     if(state.micStream){state.micStream.getTracks().forEach(function(t){t.stop()});state.micStream=null;}
@@ -443,11 +543,14 @@ async function startMic(){
 function stopMic(){
   state.listening=false;cancelAnimationFrame(state.animation);
   if(state.micStream){state.micStream.getTracks().forEach(function(t){t.stop()});state.micStream=null;}
-  state.analyser=null;state.buffer=null;state.matchSince=0;
+  state.analyser=null;state.buffer=null;state.matchSince=0;state.calibrating=false;state.calibrationSamples=[];state.noiseFloor=.008;
   $("micLed").classList.remove("live");$("micStatus").textContent="Microphone is off";
-  $("micBtn").textContent="🎤 START LISTENING";$("levelFill").style.width="0%";
+  $("micBtn").textContent="🎤 START LISTENING";$("levelFill").style.width="0%";$("calibrateBtn").disabled=true;
+  $("calibrationInfo").textContent="Room noise: not measured yet";
+  setSignal("","○ Microphone off","Press Start Listening to measure the room before playing.");
 }
 async function hear(){
+  if(state.calibrating)return;
   var key=currentKey();if(!key||complete())return;
   var Context=window.AudioContext||window.webkitAudioContext;if(!Context)return;
   try{
@@ -472,6 +575,7 @@ $("instrumentSelect").addEventListener("change",function(){
 });
 $("micBtn").addEventListener("click",startMic);
 $("hearBtn").addEventListener("click",hear);
+$("calibrateBtn").addEventListener("click",startCalibration);
 $("skipBtn").addEventListener("click",next);
 $("resetBtn").addEventListener("click",function(){if(confirm("Clear progress for this saxophone on this Chromebook?")){saved={warmup:false,mastered:[],pattern:false,song:false};save();setMode("warmup");}});
 if(new URLSearchParams(location.search).has("demo")){
