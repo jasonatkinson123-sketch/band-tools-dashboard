@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#102e33">
+<title>Saxophone Quest • Derby Band</title>
+<style>
+:root{--navy:#102e33;--navy2:#19444a;--ink:#112a30;--paper:#f6f5e9;--white:#fff;--purple:#16787e;--yellow:#ffcf73;--green:#207f54;--muted:#647983}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+body{background:var(--navy);color:var(--paper);background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:28px 28px}
+button,a{font:inherit}button{cursor:pointer}
+button:focus-visible,a:focus-visible{outline:4px solid var(--yellow);outline-offset:4px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.wrap{width:min(1080px,94vw);margin:0 auto;padding:20px 0 38px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.back{color:#ded6ff;text-decoration:none;font-size:.85rem;font-weight:700}
+.badge{border:1px solid #9e94cb;padding:8px 12px;letter-spacing:.1em;text-transform:uppercase;font-size:.68rem}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:15px;border-bottom:3px solid var(--yellow);padding:10px 0 20px;margin-bottom:18px}
+.kicker{font-size:.76rem;letter-spacing:.2em;color:var(--yellow);font-weight:800}
+h1{font-size:clamp(2.3rem,7vw,5.4rem);line-height:.92;letter-spacing:-.055em;text-transform:uppercase;margin:8px 0}
+.intro{max-width:350px;color:#d1cee8;line-height:1.5;font-size:.93rem;margin:0}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+.tab{background:#292d51;border:2px solid #555b84;color:white;min-height:80px;text-align:left;padding:12px;box-shadow:4px 4px 0 #0c0e1c}
+.tab[aria-pressed=true]{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+.tab[disabled]{opacity:.58}
+.tabnum{display:block;font-size:.69rem;letter-spacing:.1em;margin-bottom:8px}
+.tabname{font-weight:900;font-size:clamp(.8rem,1.5vw,1rem)}
+.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(250px,.8fr);gap:17px}
+.card{background:var(--paper);border:3px solid var(--ink);color:var(--ink);box-shadow:7px 7px 0 #0b0c1c;padding:22px}
+.card.dark{background:#292d51;color:var(--paper);border-color:#a19dc4}
+.section-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#67529e}
+.counter{font-size:.8rem;font-weight:800;background:#efe7ff;padding:7px 10px}
+h2{font-size:clamp(1.3rem,3vw,2rem);line-height:1.12;margin:13px 0 7px}
+.help{font-family:Arial,Helvetica,sans-serif;color:#52546a;line-height:1.4;font-size:.96rem;min-height:39px;margin:0 0 12px}
+.staff{display:block;width:100%;height:auto;background:#fff;border:2px solid var(--ink);border-radius:6px}
+.notearea{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px}
+.note-label{font-size:clamp(2.5rem,6vw,4.2rem);font-weight:950;line-height:1;letter-spacing:-.07em}
+.fingering{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:#4a4b5b;margin-top:4px}
+.valves{display:flex;gap:8px}
+.valve-wrap{text-align:center;font-size:.7rem;font-weight:900}
+.valve{height:59px;width:36px;border:3px solid #343149;border-radius:9px 9px 4px 4px;background:#fff;margin:5px 0}
+.valve.down{background:var(--purple);box-shadow:inset 0 8px 0 #473080}
+.feedback{border:2px solid #c9bfd7;background:#f0edf8;border-radius:6px;padding:13px 16px;margin-top:17px;min-height:79px;display:flex;align-items:center;gap:13px}
+.feedback.good{border-color:#5ea984;background:#e0f5e7}
+.icon{font-size:1.9rem;font-weight:900;color:var(--purple);width:34px;text-align:center}
+.feedback.good .icon{color:var(--green)}
+.feedtitle{font-weight:900;font-size:1rem}
+.feedline{font-size:.82rem;color:#55586b;margin-top:3px;line-height:1.35}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.btn{border:2px solid var(--ink);background:var(--yellow);color:var(--ink);font-weight:900;padding:12px 15px;min-height:45px;box-shadow:3px 3px 0 var(--ink)}
+.btn.secondary{background:white}
+.btn.alt{background:#ede7f9}
+.mic-led{width:12px;height:12px;display:inline-block;border-radius:50%;background:#aaafc9;margin-right:6px;vertical-align:middle}
+.mic-led.live{background:#55d29c;box-shadow:0 0 0 4px #55d29c22}
+.level{height:9px;background:#474c70;border-radius:8px;overflow:hidden;margin:12px 0}
+.level>span{display:block;height:100%;width:0;background:var(--yellow);transition:width .08s linear}
+.small{font-size:.82rem;line-height:1.5;color:#e1def5}
+.micstatus{font-weight:900;font-size:1.05rem;margin:8px 0}
+.progressbar{height:14px;background:#555b80;border:2px solid #7c80a0;margin:14px 0 10px}
+.progressbar>span{display:block;background:#63e0ab;height:100%;width:0;transition:width .2s}
+.stars{font-size:1.25rem;letter-spacing:.07em;color:var(--yellow)}
+.songstrip{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 1px}
+.songnote{display:inline-flex;justify-content:center;align-items:center;min-width:37px;padding:7px 8px;border:2px solid #b7aec8;background:#f5f1fc;font-size:.79rem;font-weight:900}
+.songnote.done{background:#d9f5e6;border-color:#91cba9;color:#276a48}
+.songnote.active{background:var(--yellow);border-color:var(--ink);box-shadow:2px 2px 0 #232034}
+.divider{height:1px;background:#71769c;margin:20px 0}
+.muted{color:#c7c5db}
+details{border:1px solid #70769e;padding:12px;margin-top:17px;font-size:.8rem;line-height:1.5}
+summary{font-weight:900;cursor:pointer}
+details p{margin:10px 0}
+.danger{border:1px solid #888caa;color:white;background:transparent;padding:8px 10px;font-size:.75rem;cursor:pointer}
+.success-pop{animation:pop .28s ease-out}
+@keyframes pop{from{transform:scale(.96)}to{transform:scale(1)}}
+@media(max-width:770px){.hero{align-items:start;flex-direction:column}.layout{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}.card{padding:15px}.top .badge{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.instrument-label{display:block;color:var(--yellow);font-size:.72rem;font-weight:900;letter-spacing:.1em;margin:10px 0 6px}
+.instrument-select{display:block;width:100%;max-width:300px;border:2px solid var(--yellow);color:var(--ink);background:var(--paper);font:900 .98rem ui-monospace,monospace;padding:10px;min-height:46px;border-radius:4px}
+.instrument-select:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.valves{display:flex;gap:17px;align-items:flex-end}
+.hand{display:flex;flex-direction:column;gap:5px;align-items:center}
+.hand-label{font-size:.69rem;font-weight:900;white-space:nowrap;color:#59676d}
+.key-dot{height:24px;width:30px;border:2px solid #29454b;border-radius:50%;background:white}
+.key-dot.down{background:var(--purple);box-shadow:inset 0 4px 0 #0d5359}
+@media(max-width:460px){.valves{gap:9px}.key-dot{height:20px;width:26px}.note-label{font-size:2.5rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="back" href="../">← BACK TO BAND TOOLS</a><span class="badge">DERBY BAND / PRIVATE PRACTICE</span></div>
+  <header class="hero"><div><div class="kicker">THE PRACTICE LAB · SAXOPHONE</div><h1>SAXOPHONE<br>QUEST <span aria-hidden="true">★</span></h1></div><div class="intro"><p style="margin:0 0 10px">One comfortable note at a time. No timer, no wrong-answer buzzer. Just play and watch your notes light up.</p>
+<label class="instrument-label" for="instrumentSelect">YOUR SAXOPHONE</label>
+<select id="instrumentSelect" class="instrument-select" aria-label="Choose saxophone type">
+  <option value="alto">Alto sax · E♭</option>
+  <option value="tenor">Tenor sax · B♭</option>
+  <option value="baritone">Baritone sax · E♭</option>
+  <option value="soprano">Soprano sax · B♭</option>
+</select></div></header>
+  <nav class="tabs" aria-label="Practice levels">
+    <button class="tab" data-mode="warmup" aria-pressed="true"><span class="tabnum">01 / GET STARTED</span><span class="tabname">Make a Sound</span></button>
+    <button class="tab" data-mode="notes" aria-pressed="false"><span class="tabnum">02 / FIVE NOTES</span><span class="tabname">Note Explorer</span></button>
+    <button class="tab" data-mode="pattern" aria-pressed="false"><span class="tabnum">03 / THREE NOTES</span><span class="tabname">Little Melody 🔒</span></button>
+    <button class="tab" data-mode="song" aria-pressed="false"><span class="tabnum">04 / FIRST SONG</span><span class="tabname">Hot Cross Buns 🔒</span></button>
+  </nav>
+  <main class="layout">
+    <section class="card" aria-label="Current challenge">
+      <div class="section-top"><span class="eyebrow" id="modeLabel">LEVEL 1 · MAKE A SOUND</span><span class="counter" id="counter">READY TO PLAY</span></div>
+      <h2 id="prompt">Play any comfortable note.</h2>
+      <p class="help" id="help">The first goal is just to make a musical sound. Any note counts!</p>
+      <svg class="staff" id="staff" viewBox="0 0 520 165" role="img" aria-label="Treble clef music staff">
+        <rect width="520" height="165" fill="white"></rect>
+      </svg>
+      <div class="notearea">
+        <div><div class="note-label" id="noteLabel">ANY NOTE</div><div class="fingering" id="fingerLabel">YOUR CHOICE</div></div>
+        <div class="valves" id="valves" aria-label="Saxophone left- and right-hand fingerings"></div>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite" aria-atomic="true">
+        <div class="icon" id="feedIcon">♪</div>
+        <div><div class="feedtitle" id="feedTitle">You can do this.</div><div class="feedline" id="feedLine">When you're ready, turn on the microphone.</div></div>
+      </div>
+      <div class="songstrip" id="songstrip" aria-label="Melody notes" hidden></div>
+      <div class="controls">
+        <button class="btn" id="micBtn">🎤 START LISTENING</button>
+        <button class="btn secondary" id="hearBtn">▶ HEAR NOTE</button>
+        <button class="btn alt" id="skipBtn">TRY ANOTHER NOTE →</button>
+      </div>
+    </section>
+    <aside class="card dark">
+      <div class="eyebrow" style="color:var(--yellow)">YOUR PRACTICE STATION</div>
+      <h2 style="margin-top:12px">Small steps count.</h2>
+      <p class="small muted">Choose your saxophone above, then play into your Chromebook microphone in a fairly quiet room. Hold each note steady for a moment. For repeated notes, stop briefly between them.</p>
+      <div class="divider"></div>
+      <div class="micstatus"><span class="mic-led" id="micLed"></span><span id="micStatus">Microphone is off</span></div>
+      <div class="level" title="Microphone input level"><span id="levelFill"></span></div>
+      <p class="small muted" id="privacy">Your sound is analyzed on this Chromebook. It is not recorded or uploaded.</p>
+      <div class="divider"></div>
+      <div class="section-top"><b>PROGRESS</b><span id="progressText">0 / 5 notes</span></div>
+      <div class="progressbar" aria-label="Current progress"><span id="progressFill"></span></div>
+      <div class="stars" id="stars" aria-label="Five progress stars">☆☆☆☆☆</div>
+      <p class="small" id="progressHint">Your progress stays saved on this Chromebook, in this browser.</p>
+      <details>
+        <summary>Teacher check / troubleshooting</summary>
+        <p id="diagnostic">Pitch: — · Input: —</p>
+        <p>Use Chrome over HTTPS. Allow microphone access when prompted. Check the Chromebook input device and microphone permission in Chrome settings. A quiet practice spot helps distinguish this instrument from other players.</p>
+        <p>This version shows written treble-clef saxophone notes and automatically transposes the microphone target to the concert pitch of the selected saxophone. Fingerings show the six main pearl keys (left hand 1–3, right hand 1–3). It checks pitch, not which keys are pressed. Notes are accepted within about half a semitone; hold the note briefly.</p>
+        <button class="danger" id="resetBtn">RESET PRACTICE PROGRESS</button>
+        <button class="danger" id="demoBtn" hidden>DEMO: PASS CURRENT NOTE</button>
+      </details>
+    </aside>
+  </main>
+</div>
+<script>
+(function(){
+"use strict";
+// Written saxophone pitches. The concert pitch is derived from the chosen sax.
+var NOTES={
+  B4:{label:"B",full:"B 4 (written)",midi:71,y:80,keys:[1]},
+  A4:{label:"A",full:"A 4 (written)",midi:69,y:90,keys:[1,2]},
+  G4:{label:"G",full:"G 4 (written)",midi:67,y:100,keys:[1,2,3]},
+  F4:{label:"F",full:"F 4 (written)",midi:65,y:110,keys:[1,2,3,4]},
+  E4:{label:"E",full:"E 4 (written)",midi:64,y:120,keys:[1,2,3,4,5]}
+};
+var ORDER=["B4","A4","G4","F4","E4"];
+var PATTERN=["B4","A4","G4"];
+var SONG=["B4","A4","G4","B4","A4","G4","G4","G4","G4","G4","A4","A4","A4","A4","B4","A4","G4"];
+var TRANSPOSITION={alto:-9,tenor:-14,baritone:-21,soprano:-2};
+var STORAGE_BASE="derby-saxophone-quest-v1-";
+var STORAGE_KEY=STORAGE_BASE+"alto";
+var state={instrument:"alto",mode:"warmup",index:0,reviewing:false,reviewed:[],listening:false,micStream:null,audio:null,analyser:null,buffer:null,animation:0,lastAnalyzed:0,lastMatched:0,matchSince:0,lastAward:null,quietSince:0,readyForRepeat:true,locked:false,popupTimer:0,ignoreUntil:0};
+function loadProgress(){
+  var data={warmup:false,mastered:[],pattern:false,song:false};
+  try{
+    var incoming=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    if(incoming&&typeof incoming==="object"){
+      data.warmup=!!incoming.warmup;
+      data.mastered=Array.isArray(incoming.mastered)?incoming.mastered.filter(function(x){return ORDER.includes(x)}):[];
+      data.pattern=!!incoming.pattern;
+      data.song=!!incoming.song;
+    }
+  }catch(e){}
+  return data;
+}
+var saved=loadProgress();
+function targetHz(key){
+  return 440*Math.pow(2,(NOTES[key].midi+TRANSPOSITION[state.instrument]-69)/12);
+}
+var $=function(id){return document.getElementById(id)};
+var tabs=[].slice.call(document.querySelectorAll(".tab"));
+var modeNames={warmup:"LEVEL 1 · MAKE A SOUND",notes:"LEVEL 2 · NOTE EXPLORER",pattern:"LEVEL 3 · LITTLE MELODY",song:"LEVEL 4 · HOT CROSS BUNS"};
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));}catch(e){}}
+function currentSequence(){if(state.mode==="pattern")return PATTERN;if(state.mode==="song")return SONG;return null;}
+function currentKey(){if(state.mode==="warmup")return null;if(state.mode==="notes")return ORDER[state.index];var seq=currentSequence();return seq?seq[state.index]:null;}
+function complete(){if(state.reviewing){if(state.mode==="warmup")return state.index>=1;if(state.mode==="notes")return state.reviewed.length===5;return state.index>=currentSequence().length;}return state.mode==="warmup"?saved.warmup:state.mode==="notes"?saved.mastered.length===ORDER.length:state.mode==="pattern"?saved.pattern:saved.song;}
+function setMessage(title,line,good){if($("feedTitle").textContent===title&&$("feedLine").textContent===line&&$("feedback").classList.contains("good")===!!good)return;$("feedTitle").textContent=title;$("feedLine").textContent=line;$("feedIcon").textContent=good?"✓":"♪";$("feedback").classList.toggle("good",!!good);$("feedback").classList.toggle("success-pop",!!good);}
+function buildStaff(key){
+  var note=key?NOTES[key]:null;
+  var svg='<rect width="520" height="165" fill="#fff"/>';
+  [40,60,80,100,120].forEach(function(y){svg+='<line x1="54" x2="493" y1="'+y+'" y2="'+y+'" stroke="#1d2034" stroke-width="2.5"/>';});
+  // U+1D11E is a Unicode treble clef; ChromeOS includes a suitable music-font fallback.
+  svg+='<text x="79" y="131" font-family="Noto Music, Segoe UI Symbol, DejaVu Sans, serif" font-size="105" fill="#1d2034">𝄞</text>';
+  if(note){
+    svg+='<ellipse cx="316" cy="'+note.y+'" rx="17" ry="12" transform="rotate(-19 316 '+note.y+')" fill="#1d2034"/>';
+    svg+='<line x1="332" y1="'+(note.y-2)+'" x2="332" y2="'+(note.y-65)+'" stroke="#1d2034" stroke-width="3.2"/>';
+  }else svg+='<text x="263" y="99" font-size="54" fill="#16787e">♪</text>';
+  $("staff").innerHTML=svg;
+  $("staff").setAttribute("aria-label",note?"Treble clef, written note "+note.full:"Treble clef staff: play any note");
+}
+function buildValves(key){
+  var note=key?NOTES[key]:null,pressed=note?note.keys:[];
+  $("valves").innerHTML=[0,1].map(function(hand){
+    var title=hand===0?"LEFT":"RIGHT";
+    return '<div class="hand"><div class="hand-label">'+title+'</div>'+[1,2,3].map(function(k){
+      var finger=k+hand*3;
+      return '<div class="key-dot '+(pressed.includes(finger)?"down":"")+'" title="'+title+' finger '+k+'"></div>';
+    }).join("")+'</div>';
+  }).join("");
+  $("valves").setAttribute("aria-label",note?"Press "+pressed.map(function(k){return (k<=3?"left ":"right ")+(k<=3?k:k-3)}).join(", "):"Choose a comfortable fingering");
+}
+function updateProgress(){
+  var done=saved.mastered.length;
+  $("progressText").textContent=done+" / 5 notes";
+  $("progressFill").style.width=(done/5*100)+"%";
+  $("stars").textContent="★".repeat(done)+"☆".repeat(5-done);
+  var hint="Progress is saved separately for each saxophone on this Chromebook.";
+  if(saved.song)hint="You played your first whole song! You can practice again anytime.";
+  else if(saved.pattern)hint="Little Melody complete! Hot Cross Buns is ready.";
+  else if(done===5)hint="All five notes mastered! Little Melody is ready.";
+  $("progressHint").textContent=hint;
+  tabs.forEach(function(tab){
+    var mode=tab.dataset.mode;
+    var allowed=mode==="warmup"||mode==="notes"||(mode==="pattern"&&done===5)||(mode==="song"&&saved.pattern);
+    tab.disabled=!allowed;tab.setAttribute("aria-pressed",String(state.mode===mode));
+    var label={warmup:"Make a Sound",notes:"Note Explorer",pattern:"Little Melody",song:"Hot Cross Buns"}[mode];
+    if(!allowed)label+=" 🔒";
+    else if((mode==="warmup"&&saved.warmup)||(mode==="notes"&&done===5)||(mode==="pattern"&&saved.pattern)||(mode==="song"&&saved.song))label+=" ✓";
+    tab.querySelector(".tabname").textContent=label;
+  });
+}
+function render(){
+  updateProgress();
+  var key=currentKey(),note=key?NOTES[key]:null,seq=currentSequence(),isDone=complete(),noteCount=state.reviewing?state.reviewed.length:saved.mastered.length;
+  $("modeLabel").textContent=modeNames[state.mode];
+  if(state.mode==="warmup"){
+    $("prompt").textContent=isDone?"Great! You made a sound.":"Play any comfortable note.";
+    $("help").textContent="Any clear, held euphonium note counts. Find a note that feels easy.";
+    $("counter").textContent=isDone?"COMPLETE ✓":"FIRST STEP";
+  }else if(state.mode==="notes"){
+    $("prompt").textContent=isDone?"All five notes!":("Find the "+note.label+".");
+    $("help").textContent=isDone?"You earned five stars. Try the three-note melody next.":"Look at the note and fingering. Play it gently and hold it steady.";
+    $("counter").textContent=noteCount+"/5 FOUND";
+  }else if(state.mode==="pattern"){
+    $("prompt").textContent=isDone?"Little Melody complete!":"Play the three-note melody.";
+    $("help").textContent="Play each note in order. The next note appears as you succeed.";
+    $("counter").textContent=(isDone?3:state.index)+"/3 NOTES";
+  }else{
+    $("prompt").textContent=isDone?"You played Hot Cross Buns!":"Play Hot Cross Buns.";
+    $("help").textContent="There's no tempo to chase. Stop briefly between repeated notes.";
+    $("counter").textContent=(isDone?SONG.length:state.index)+"/"+SONG.length+" NOTES";
+  }
+  buildStaff(isDone?null:key);
+  $("noteLabel").textContent=isDone?"★ NICE WORK":note?note.label:"ANY NOTE";
+  $("fingerLabel").textContent=isDone?"CHALLENGE COMPLETE":note?("WRITTEN NOTE · "+state.instrument.toUpperCase()+" SAX"):"PLAY YOUR CHOICE";
+  buildValves(isDone?null:key);
+  $("hearBtn").disabled=!note||isDone;
+  $("skipBtn").textContent=isDone?({warmup:"GO TO NOTES →",notes:"PLAY LITTLE MELODY →",pattern:"PLAY HOT CROSS BUNS →",song:"PLAY AGAIN ↻"})[state.mode]:state.mode==="warmup"?"GO TO NOTES →":state.mode==="notes"?"TRY ANOTHER NOTE →":"START OVER ↻";
+  $("songstrip").hidden=!seq;
+  if(seq){
+    $("songstrip").innerHTML=seq.map(function(x,i){
+      return '<span class="songnote '+((isDone||i<state.index)?"done":(i===state.index?"active":""))+'">'+NOTES[x].label+'</span>';
+    }).join("");
+  }else $("songstrip").innerHTML="";
+}
+function pickUnmastered(after){
+  for(var step=0;step<ORDER.length;step++){var i=(after+step)%ORDER.length;if(!(state.reviewing?state.reviewed:saved.mastered).includes(ORDER[i]))return i;}
+  return 0;
+}
+function setMode(mode,restart){
+  if(mode==="pattern"&&saved.mastered.length!==5)return;
+  if(mode==="song"&&!saved.pattern)return;
+  clearTimeout(state.popupTimer);state.locked=false;state.matchSince=0;state.lastMatched=0;state.lastAward=null;state.readyForRepeat=true;
+  state.mode=mode;state.index=0;
+  state.reviewing=!!restart||(mode==="warmup"&&saved.warmup)||(mode==="notes"&&saved.mastered.length===5)||(mode==="pattern"&&saved.pattern)||(mode==="song"&&saved.song);
+  state.reviewed=[];
+  if(mode==="notes")state.index=pickUnmastered(0);
+  render();
+  setMessage(complete()?"Nice work!":"You can do this.",complete()?"Choose another level, or practice again.":state.listening?"Play when you feel ready.":"Turn on the microphone when you're ready.",complete());
+}
+function award(){
+  if(state.locked||complete())return;
+  state.locked=true;state.matchSince=0;state.lastMatched=0;
+  state.readyForRepeat=false;
+  state.lastAward=currentKey();
+  var mode=state.mode;
+  if(mode==="warmup"){saved.warmup=true;state.index=1;}
+  if(mode==="notes"){var key=ORDER[state.index];var bucket=state.reviewing?state.reviewed:saved.mastered;if(!bucket.includes(key))bucket.push(key);}
+  if(mode==="pattern"){state.index++;if(state.index>=PATTERN.length)saved.pattern=true;}
+  if(mode==="song"){state.index++;if(state.index>=SONG.length)saved.song=true;}
+  save();render();
+  var done=complete();
+  var phrase=done?({warmup:"Your first sound! That's a win.",notes:"Five notes mastered!",pattern:"Three notes in a row!",song:"You played the whole song!"})[mode]:"Yes! You found it.";
+  setMessage(phrase,done?"Well done. You can go to the next level.":"Great playing. Ready for the next note?",true);
+  state.popupTimer=setTimeout(function(){
+    if(state.mode!==mode)return;
+    state.locked=false;
+    if(done){render();return;}
+    if(mode==="notes")state.index=pickUnmastered((state.index+1)%5);
+    render();setMessage("Ready when you are.",state.listening?"Play the note on the screen.":"Turn on the microphone to continue.",false);
+  },850);
+}
+function next(){
+  if(state.locked)return;
+  if(complete()){
+    if(state.mode==="warmup")setMode("notes");
+    else if(state.mode==="notes")setMode("pattern");
+    else if(state.mode==="pattern")setMode("song");
+    else setMode("song",true);
+    return;
+  }
+  if(state.mode==="warmup"){setMode("notes");return;}
+  if(state.mode==="notes"){
+    state.index=pickUnmastered((state.index+1)%5);state.matchSince=0;state.lastMatched=0;
+    render();setMessage("No rush.","Try this note when you're ready.",false);
+  }else{
+    setMode(state.mode,true);
+  }
+}
+function detectPitch(source,sampleRate){
+  // Downsample by two to keep real-time YIN practical on school Chromebooks.
+  var stride=2,length=2048,sr=sampleRate/stride;
+  var points=new Float32Array(length+Math.floor(sr/72)+2);
+  for(var i=0;i<points.length;i++)points[i]=source[i*stride]||0;
+  var low=Math.max(2,Math.floor(sr/760)),high=Math.min(points.length-length-1,Math.floor(sr/78));
+  var diff=new Float32Array(high+1),cmnd=new Float32Array(high+1);
+  var total=0;
+  for(var lag=1;lag<=high;lag++){
+    var sum=0;
+    for(var j=0;j<length;j++){var delta=points[j]-points[j+lag];sum+=delta*delta;}
+    diff[lag]=sum;total+=sum;cmnd[lag]=total>0?diff[lag]*lag/total:1;
+  }
+  var best=-1;
+  for(var k=low;k<=high;k++){
+    if(cmnd[k]<.16){while(k+1<=high&&cmnd[k+1]<cmnd[k])k++;best=k;break;}
+  }
+  if(best<0){
+    var smallest=.24;
+    for(var q=low;q<=high;q++){if(cmnd[q]<smallest){smallest=cmnd[q];best=q;}}
+  }
+  if(best<0)return null;
+  var before=cmnd[best-1]||cmnd[best],after=cmnd[best+1]||cmnd[best];
+  var divisor=2*(2*cmnd[best]-before-after);
+  var fraction=Math.abs(divisor)>1e-8?(after-before)/divisor:0;
+  if(!Number.isFinite(fraction)||Math.abs(fraction)>1)fraction=0;
+  var freq=sr/(best+fraction);
+  return Number.isFinite(freq)?{hz:freq,confidence:1-cmnd[best]}:null;
+}
+function labelPitch(midi){
+  var names=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+  return names[(midi%12+12)%12]+(Math.floor(midi/12)-1);
+}
+function observe(hz,timestamp){
+  if(state.locked||complete())return;
+  var target=currentKey();
+  var match=false;
+  if(state.mode==="warmup")match=hz>=82&&hz<=700;
+  else if(target){var cents=Math.abs(1200*Math.log2(hz/targetHz(target)));match=cents<=48;}
+  if(match){
+    var repeating=target&&state.lastAward===target&&!state.readyForRepeat;
+    if(repeating){
+      setMessage("One more time!","Release the note for a moment, then play it again.",false);
+      state.matchSince=0;return;
+    }
+    if(!state.matchSince)state.matchSince=timestamp;
+    state.lastMatched=timestamp;
+    if(timestamp-state.matchSince>=260){award();}
+    else if(timestamp-state.matchSince>=100)setMessage("I hear it!","Hold that sound a little longer...",false);
+  }else{
+    state.matchSince=0;
+    if(target)setMessage("Nice try.","Try the note shown above. You're free to try again.",false);
+  }
+}
+function loop(now){
+  if(!state.listening)return;
+  state.animation=requestAnimationFrame(loop);
+  if(now-state.lastAnalyzed<75)return;
+  state.lastAnalyzed=now;
+  if(now<state.ignoreUntil){state.matchSince=0;return;}
+  if(!state.analyser||!state.buffer)return;
+  state.analyser.getFloatTimeDomainData(state.buffer);
+  var square=0;for(var i=0;i<state.buffer.length;i++)square+=state.buffer[i]*state.buffer[i];
+  var rms=Math.sqrt(square/state.buffer.length);
+  $("levelFill").style.width=(Math.min(100,Math.max(0,rms*900)))+"%";
+  if(rms<.008){
+    if(!state.quietSince)state.quietSince=now;
+    if(now-state.quietSince>155)state.readyForRepeat=true;
+    state.matchSince=0;
+    $("diagnostic").textContent="Pitch: — · Input: "+rms.toFixed(3);
+    return;
+  }
+  state.quietSince=0;
+  var pitch=detectPitch(state.buffer,state.audio.sampleRate);
+  if(!pitch||pitch.confidence<.74){
+    if(!state.quietSince)state.quietSince=now;
+    if(now-state.quietSince>155)state.readyForRepeat=true;
+    state.matchSince=0;
+    $("diagnostic").textContent="Pitch: unclear · Input: "+rms.toFixed(3);
+    return;
+  }
+  var midi=Math.round(69+12*Math.log2(pitch.hz/440));
+  $("diagnostic").textContent="Heard concert "+labelPitch(midi)+" ("+pitch.hz.toFixed(1)+" Hz) · Expected "+(currentKey()?targetHz(currentKey()).toFixed(1)+" Hz":"any pitch")+" · Confidence: "+Math.round(pitch.confidence*100)+"% · Input: "+rms.toFixed(3);
+  observe(pitch.hz,now);
+}
+async function startMic(){
+  if(state.listening){stopMic();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setMessage("Microphone unavailable.","This page needs HTTPS and a browser that supports microphone access.",false);return;
+  }
+  $("micBtn").disabled=true;$("micStatus").textContent="Requesting permission…";
+  try{
+    var stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1},video:false});
+    var Context=window.AudioContext||window.webkitAudioContext;
+    if(!Context)throw new Error("This browser cannot analyze live audio.");
+    var context=state.audio||new Context();
+    await context.resume();
+    state.audio=context;state.micStream=stream;
+    var source=context.createMediaStreamSource(stream),analyser=context.createAnalyser();
+    analyser.fftSize=8192;analyser.smoothingTimeConstant=0;source.connect(analyser);
+    state.analyser=analyser;state.buffer=new Float32Array(analyser.fftSize);
+    state.listening=true;state.lastAnalyzed=0;state.matchSince=0;
+    $("micLed").classList.add("live");$("micStatus").textContent="Microphone is listening";
+    $("micBtn").textContent="■ STOP LISTENING";
+    setMessage("Microphone is on.","Play when you feel ready.",false);
+    state.animation=requestAnimationFrame(loop);
+  }catch(error){
+    if(state.micStream){state.micStream.getTracks().forEach(function(t){t.stop()});state.micStream=null;}
+    var denied=error&&(["NotAllowedError","PermissionDeniedError"].includes(error.name));
+    $("micStatus").textContent="Microphone could not start";
+    setMessage("Let's fix the microphone.",denied?"Please allow microphone access for this site in Chrome, then try again.":"Check your microphone in Chromebook settings, then try again.",false);
+  }finally{$("micBtn").disabled=false;}
+}
+function stopMic(){
+  state.listening=false;cancelAnimationFrame(state.animation);
+  if(state.micStream){state.micStream.getTracks().forEach(function(t){t.stop()});state.micStream=null;}
+  state.analyser=null;state.buffer=null;state.matchSince=0;
+  $("micLed").classList.remove("live");$("micStatus").textContent="Microphone is off";
+  $("micBtn").textContent="🎤 START LISTENING";$("levelFill").style.width="0%";
+}
+async function hear(){
+  var key=currentKey();if(!key||complete())return;
+  var Context=window.AudioContext||window.webkitAudioContext;if(!Context)return;
+  try{
+    var context=state.audio||new Context();state.audio=context;await context.resume();
+    state.ignoreUntil=performance.now()+1150;state.matchSince=0;
+    var t=context.currentTime,osc=context.createOscillator(),gain=context.createGain();
+    osc.type="sine";osc.frequency.setValueAtTime(targetHz(key),t);
+    gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.14,t+.04);
+    gain.gain.setValueAtTime(.14,t+.55);gain.gain.exponentialRampToValueAtTime(.001,t+.85);
+    osc.connect(gain);gain.connect(context.destination);osc.start(t);osc.stop(t+.88);
+  }catch(e){setMessage("Reference note unavailable.","You can still practice without it.",false);}
+}
+tabs.forEach(function(tab){tab.addEventListener("click",function(){setMode(tab.dataset.mode);});});
+$("instrumentSelect").addEventListener("change",function(){
+  var value=$("instrumentSelect").value;
+  if(!Object.prototype.hasOwnProperty.call(TRANSPOSITION,value))return;
+  stopMic();
+  state.instrument=value;
+  STORAGE_KEY=STORAGE_BASE+value;
+  saved=loadProgress();
+  setMode("warmup");
+});
+$("micBtn").addEventListener("click",startMic);
+$("hearBtn").addEventListener("click",hear);
+$("skipBtn").addEventListener("click",next);
+$("resetBtn").addEventListener("click",function(){if(confirm("Clear progress for this saxophone on this Chromebook?")){saved={warmup:false,mastered:[],pattern:false,song:false};save();setMode("warmup");}});
+if(new URLSearchParams(location.search).has("demo")){
+  $("demoBtn").hidden=false;$("demoBtn").addEventListener("click",function(){award();});
+}
+window.addEventListener("pagehide",stopMic);
+state.reviewing=!!saved.warmup;render();setMessage("You can do this.","When you're ready, turn on the microphone.",false);
+})();
+</script>
+</body>
+</html>
