@@ -31,6 +31,7 @@ import {
   importPack
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
+const classroom = new Map();
 const catalog = new Map(),
   builtins = new Map(),
   links = new URLSearchParams(location.search);
@@ -169,6 +170,13 @@ async function showNotation() {
   await reader.highlight(map().find(m => m.t <= engine.position && m.end > engine.position)?.n, true)
 }
 async function selectSong(id, p, query) {
+  if (classroom.has(id) && !catalog.has(id)) {
+    const target = new URL(classroom.get(id));
+    if (query) for (const [key, value] of query) target.searchParams.set(key, value);
+    if (p) target.searchParams.set('part', p);
+    location.assign(target.href);
+    return;
+  }
   const gen = ++selection;
   closeReference();
   pause();
@@ -180,7 +188,7 @@ async function selectSong(id, p, query) {
   $('scoreView').hidden = !song.conductor;
   loadParts(p);
   const choices = [...catalog.values()].map(s => [s.id, s.title]);
-  if (!catalog.has(sleighId)) choices.unshift([sleighId, 'Sleigh Ride · open class pack']);
+  if (classroom.has(sleighId) && !catalog.has(sleighId)) choices.unshift([sleighId, 'Sleigh Ride']);
   $('song').innerHTML = options(choices, song.id);
   $('mute').checked = false;
   $('loop').checked = false;
@@ -495,19 +503,15 @@ async function showTakes() {
 }
 
 function showLibrary() {
-  const classPack = catalog.has(sleighId) ? '' : `<article class="workcard">
+  const classPack = !classroom.has(sleighId) || catalog.has(sleighId) ? '' : `<article class="workcard"><div class="cover">${icon('score')}</div>
     <h2>Sleigh Ride</h2><p>Leroy Anderson · Arranged by Michael Story</p>
-    <p>Download Sleigh-Ride-120.dms from your Google Classroom assignment. Open it here to see your part and hear the band.</p>
-    <button id="openSleighPack" type="button">Open Sleigh Ride practice pack</button></article>`;
+    <div class="tags">14 parts · Ensemble playback</div>
+    <button data-open="${sleighId}">Open in practice room →</button></article>`;
   $('libraryList').innerHTML = '<div class="libraryGrid">' + classPack + [...catalog.values()].map(s =>
     '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + esc(s.title) + '</h2><p>' + esc(s
       .credit || s.kind) + '</p><div class="tags">' + esc(s.kind) + ' · ' + s.parts.length + ' parts · ' + (modes(s)
       .length ? 'Ensemble playback' : 'Notation & recording') + '</div><button data-open="' + esc(s.id) +
     '">Open in practice room →</button></article>').join('') + '</div>';
-  if ($('openSleighPack')) $('openSleighPack').onclick = () => {
-    if (pendingLink?.get('piece') !== sleighId) pendingLink = new URLSearchParams({piece: sleighId});
-    $('packInput').click();
-  };
   document.querySelectorAll('[data-open]').forEach(b => b.onclick = handle(async () => {
     await switchView('practice', b.dataset.open)
   }))
@@ -598,13 +602,7 @@ function wire() {
   $('closePlayer').onclick = closeReference;
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
-  $('song').onchange = handle(async e => {
-    if (e.target.value === sleighId && !catalog.has(sleighId)) {
-      e.target.value = song.id;
-      await switchView('library');
-      $('openSleighPack').focus();
-    } else await selectSong(e.target.value);
-  });
+  $('song').onchange = handle(e => selectSong(e.target.value));
   $('part').onchange = handle(async e => {
     pause();
     loadParts(e.target.value);
@@ -742,6 +740,10 @@ async function init() {
   wire();
   const index = await fetch('./catalog.json').then(r => r.json());
   for (const path of index) {
+    if (typeof path === 'object' && path.studentURL) {
+      classroom.set(path.id, path.studentURL);
+      continue;
+    }
     const r = await fetch(path);
     if (!r.ok) throw Error('A composition could not load. Refresh the studio.');
     const s = await r.json();
@@ -755,6 +757,10 @@ async function init() {
     tell('Local storage is unavailable. Practice playback still works.')
   }
   const requested = links.get('piece');
+  if (classroom.has(requested) && !links.has('rev')) {
+    catalog.delete(requested);
+    return selectSong(requested, links.get('part'), links);
+  }
   if (requested && (!catalog.has(requested) || (links.get('rev') && links.get('rev') !== catalog.get(requested)
       ?.revision))) {
     pendingLink = links;
