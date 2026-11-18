@@ -1,0 +1,18 @@
+{
+  "piece": "Sleigh Ride · Michael Story",
+  "measures": 120,
+  "baseline": {
+    "practicePackSHA256": "e42990f6f7472c29c42f2feedeecc310daf3eb25dbb51cf3a7ebf6f462578cd0",
+    "midiSHA256": "3209e63e2b441ac6a2dc0e769833583f4b4167efa421df615df3b3647a718710",
+    "range": [
+      1,
+      4
+    ],
+    "tracks": 9,
+    "selectableParts": 10,
+    "events": 88
+  },
+  "sourceParts": 14,
+  "referencePDF": "38-page compilation of instrumental parts",
+  "status": "Opening preserved; full orchestration in progress. Musical data is held privately."
+}
