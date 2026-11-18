@@ -34,7 +34,7 @@
       <div class="desk">
         <article class="reader panel">
           <div class="cardhead">
-            <h2><i data-icon="score"></i>Sheet music</h2>
+            <h2><i data-icon="score"></i>Sheet music</h2><button class="textbtn" id="scoreView" hidden>Conductor view</button>
             <div class="viewerTools"><button id="smaller" title="Zoom out" aria-label="Zoom out">−</button><span
                 id="zoomPct">100%</span><button id="bigger" title="Zoom in" aria-label="Zoom in">+</button><span
                 class="vr"></span><button id="expand" aria-label="Expand sheet music" title="Expand sheet music"><i
@@ -80,6 +80,7 @@
                     clicks</small></span><input id="count" type="checkbox" checked></label><label
                 class="switchline"><span><i data-icon="volume"></i>Mute my part</span><input id="mute"
                   type="checkbox"></label>
+              <label id="isolationLabel" hidden>Hear<select id="isolation" aria-label="Isolate section or track"></select></label>
               <div class="line volumeRow"><label for="volume">Ensemble volume</label><output id="volRead">70%</output>
               </div><input id="volume" type="range" min="0" max="100" value="70">
               <hr><label class="switchline"><span><i data-icon="loop"></i>Loop passage</span><input id="loop"
