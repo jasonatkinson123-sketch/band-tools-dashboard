@@ -217,7 +217,7 @@ async function selectSong(id, p, query) {
         $('loop').checked = query.get('loop') === '1'
       }
     }
-    $('mute').checked = query.get('mute') === '1' && canMute();
+    $('mute').checked = query.get('mute') === '1' && $('isolation').value !== 'mine' && canMute();
     if (query.has('count')) $('count').checked = query.get('count') === '1'
   }
   engine.mute($('mute').checked ? muteKey() : '');
@@ -241,16 +241,22 @@ function configureMixer(requested) {
   const ids = new Set(mode === 'stems' ? (song.stems || []).map(s => s.part) : (song.notes || []).map(n => n.part));
   const tracks = song.parts.filter(p => ids.has(p.id));
   const groups = [...new Set(tracks.flatMap(p => [p.family, p.section]).filter(Boolean))];
-  const choices = [['all','Full ensemble'], ...groups.map(g => ['group:' + g,g]),
+  const choices = [['all','Full ensemble'], ...(canMute() ? [['mine','My part only']] : []), ...groups.map(g => ['group:' + g,g]),
     ...tracks.map(p => ['part:' + p.id,p.name])];
   picker.innerHTML = options(choices, choices.some(([k]) => k === requested) ? requested : 'all');
   function apply() {
     const id = picker.value;
-    const selected = id.startsWith('group:') ? tracks.filter(p => p.family === id.slice(6) || p.section === id.slice(6)).map(p => p.id) :
+    if (id === 'mine') {
+      $('mute').checked = false;
+      engine.mute('');
+    }
+    $('soloPart').setAttribute('aria-pressed', String(id === 'mine'));
+    $('soloPart').textContent = id === 'mine' ? 'Return to ensemble' : 'Solo my part';
+    const selected = id === 'mine' ? [muteKey()] : id.startsWith('group:') ? tracks.filter(p => p.family === id.slice(6) || p.section === id.slice(6)).map(p => p.id) :
       id.startsWith('part:') ? [id.slice(5)] : null;
     engine.isolate(selected)
   }
-  picker.onchange = apply;
+  picker.onchange = () => { apply(); drawState() };
   apply()
 }
 
@@ -309,7 +315,7 @@ function drawState() {
     has = total() > 0,
     click = mode === 'click';
   $('play').innerHTML = icon(playing ? 'pause' : 'play') + '<span>' + (busy ? 'Preparing…' : playing ? 'Pause' : click ?
-    'Start metronome' : 'Play ensemble') + '</span>';
+    'Start metronome' : $('isolation').value === 'mine' ? 'Play my part' : 'Play ensemble') + '</span>';
   $('play').disabled = locked;
   $('restart').disabled = locked;
   $('record').disabled = busy;
@@ -323,7 +329,9 @@ function drawState() {
   $('gain').disabled = busy;
   $('micBtn').disabled = locked;
   $('mix').disabled = locked;
-  $('mute').disabled = busy || !canMute();
+  $('soloPart').hidden = !canMute();
+  $('soloPart').disabled = locked;
+  $('mute').disabled = busy || !canMute() || $('isolation').value === 'mine';
   $('mute').title = canMute() ? 'Mute the selected playback track' : 'Requires a separate track assigned to this part.';
   for (const id of ['song', 'part', 'share']) $(id).disabled = locked;
   if ($('sourcePick')) $('sourcePick').disabled = locked;
@@ -493,8 +501,16 @@ function showLibrary() {
     await switchView('practice', b.dataset.open)
   }))
 }
-async function switchView(v, pieceId, partId, query) {
+async function switchView(v, pieceId, partId, query, unlocked = false) {
   if (busy) return;
+  if (v === 'teacher' && view !== 'teacher' && !unlocked) {
+    $('deskForm').reset();
+    $('deskError').textContent = '';
+    $('deskGate').showModal();
+    $('deskPin').focus();
+    return;
+  }
+  if (view === 'teacher' && v !== 'teacher') $('teacherBody').replaceChildren();
   closeReference();
   pause();
   mic.disable();
@@ -542,7 +558,31 @@ function showLink() {
   $('linkValue').select()
 }
 
+async function validDeskPin(pin) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', encoder.encode(pin), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: encoder.encode('164a3c5e5b9f8c909e7b6a4c66a917b2'), iterations: 180000}, key, 256);
+  return Array.from(new Uint8Array(bits), byte => byte.toString(16).padStart(2, '0')).join('') === '95b46dece007173d8040cba889eb32ba26dbcfb2012917403d30c1f95835205c';
+}
 function wire() {
+  $('cancelDesk').onclick = () => $('deskGate').close();
+  $('deskGate').onclose = () => $('deskForm').reset();
+  $('deskForm').onsubmit = handle(async e => {
+    e.preventDefault();
+    const pin = $('deskPin').value;
+    if (!await validDeskPin(pin)) {
+      $('deskError').textContent = 'Incorrect PIN. Try again.';
+      $('deskPin').select();
+      return;
+    }
+    if (!$('deskGate').open) return;
+    $('deskGate').close();
+    await switchView('teacher', undefined, undefined, undefined, true);
+  });
+  $('soloPart').onclick = () => {
+    $('isolation').value = $('isolation').value === 'mine' ? 'all' : 'mine';
+    $('isolation').onchange();
+  };
   $('scoreView').onclick = handle(async () => { showingScore = !showingScore; await showNotation() });
   $('closePlayer').onclick = closeReference;
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
@@ -551,6 +591,7 @@ function wire() {
   $('part').onchange = handle(async e => {
     pause();
     loadParts(e.target.value);
+    configureMixer($('isolation').value);
     engine.mute($('mute').checked ? muteKey() : '');
     if (!canMute()) $('mute').checked = false;
     await showNotation();
