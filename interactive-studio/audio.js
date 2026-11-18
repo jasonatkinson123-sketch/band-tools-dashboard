@@ -32,7 +32,7 @@ export class Transport {
   bus(id) {
     if (!this.buses.has(id)) {
       const b = this.ctx.createGain();
-      b.gain.value = id === this.muted && id !== '' ? 0 : 1;
+      b.gain.value = this.gainFor(id);
       b.connect(this.master);
       this.buses.set(id, b)
     }
@@ -40,8 +40,18 @@ export class Transport {
   }
   mute(id) {
     this.muted = id;
-    for (const [key, b] of this.buses) b.gain.setTargetAtTime(key === id && id !== '' ? 0 : 1, this.ctx.currentTime,
-      .008)
+    this.updateMix()
+  }
+  gainFor(id) {
+    if (id === '@click') return 1;
+    return (id && id === this.muted) || (this.isolated && !this.isolated.has(id)) ? 0 : 1
+  }
+  isolate(ids) {
+    this.isolated = ids ? new Set(ids) : null;
+    this.updateMix()
+  }
+  updateMix() {
+    for (const [id, bus] of this.buses) bus.gain.setTargetAtTime(this.gainFor(id), this.ctx.currentTime, .008)
   }
   reset() {
     this.stop();
@@ -50,10 +60,26 @@ export class Transport {
     this.prepared = [];
     this.preparedRate = null;
     this.bufferKey = null;
+    this.soundBank = null;
+    this.bankSong = null;
+    this.isolated = null;
     for (const b of this.buses.values()) b.disconnect();
     this.buses.clear()
   }
   async prepare(song, mode) {
+    if (mode === 'synth' && song.sampleZones && this.bankSong !== song) {
+      let blob = song.bankFile;
+      if (!blob && song.bankResource) {
+        const response = await fetch(song.bankResource);
+        if (!response.ok) throw Error('The instrument sounds could not load.');
+        blob = await response.blob()
+      }
+      if (blob) {
+        const decoder = new OfflineAudioContext(1, 1, 22050);
+        this.soundBank = await decoder.decodeAudioData(await blob.arrayBuffer());
+        this.bankSong = song
+      }
+    }
     if (!['mix', 'stems'].includes(mode)) {
       this.prepared = [];
       this.preparedRate = null;
@@ -151,6 +177,40 @@ export class Transport {
     osc.start(when);
     osc.stop(when + d)
   }
+  playNote(note, when, seconds, elapsed) {
+    const zone = this.song.sampleZones?.[note.sample];
+    if (!zone || !this.soundBank) return this.tone(note.midi, when, seconds, note.part);
+    const [offset, length] = zone;
+    const skip = Math.min(elapsed, Math.max(0, length - seconds));
+    const playFor = Math.min(seconds, length - skip, this.soundBank.duration - offset - skip);
+    if (!(playFor > .003)) return;
+    const source = this.ctx.createBufferSource();
+    const gain = this.ctx.createGain();
+    source.buffer = this.soundBank;
+    const level = Math.pow(Math.max(1, Math.min(127, note.velocity || 86)) / 86, 1.75);
+    gain.gain.setValueAtTime(elapsed ? .0001 : level, when);
+    if (elapsed) gain.gain.linearRampToValueAtTime(level, when + Math.min(.007, playFor / 3));
+    const release = Math.min(.035, playFor / 3);
+    gain.gain.setValueAtTime(level, when + playFor - release);
+    gain.gain.linearRampToValueAtTime(0, when + playFor);
+    const expression = this.ctx.createGain();
+    if (Array.isArray(note.envelope)) {
+      const position = elapsed * this.rate;
+      let previous = [0, 1];
+      for (const point of note.envelope) {
+        const [offset, level] = point;
+        if (offset > position) {
+          const fraction = Math.max(0, (position - previous[0]) / (offset - previous[0]));
+          if (previous[0] <= position) expression.gain.setValueAtTime(previous[1] + (level - previous[1]) * fraction, when);
+          expression.gain.linearRampToValueAtTime(level, when + (offset-position) / this.rate)
+        } else expression.gain.setValueAtTime(level, when);
+        previous = point
+      }
+    }
+    source.connect(gain).connect(expression).connect(this.bus(note.part));
+    this.watch(source, [gain, expression]);
+    source.start(when, offset + skip, playFor)
+  }
   start({
     song,
     mode,
@@ -170,8 +230,9 @@ export class Transport {
     this.names = new Map(song.parts.map(p => [p.id, p.name]));
     const initial = this.pos >= from && this.pos < to - .003 ? this.pos : from;
     this.pos = initial;
-    const beat = 60 / (song.bpm || 96) / this.rate;
-    this.origin = this.ctx.currentTime + .05 + (count ? 4 * beat : 0);
+    const beat = 60 / (song.bpm || 96) * (song.countBeatQuarters || 1) / this.rate;
+    const countBeats = song.countBeats || 4;
+    this.origin = this.ctx.currentTime + .05 + (count ? countBeats * beat : 0);
     this.countBeat = beat;
     this.initial = initial;
     this.nextCtx = this.origin;
@@ -180,7 +241,7 @@ export class Transport {
     this.playing = true;
     onStart?.();
     if (count)
-      for (let i = 0; i < 4; i++) this.tone(i ? 83 : 90, this.origin - (4 - i) * beat, .045, '@click', true);
+      for (let i = 0; i < countBeats; i++) this.tone(i ? 83 : 90, this.origin - (countBeats - i) * beat, .045, '@click', true);
     this.tick();
     this.timer = setInterval(() => this.tick(), 30)
   }
@@ -234,7 +295,7 @@ export class Transport {
           if (n.t < begin - 1e-9 && (!this.segmentHead || n.t + n.d <= begin + .005)) continue;
           const onset = Math.max(begin, n.t),
             d = (Math.min(n.t + n.d, this.to) - onset) / this.rate;
-          if (d > 0) this.tone(n.midi, at + (onset - begin) / this.rate, d, n.part)
+          if (d > 0) this.playNote(n, at + (onset - begin) / this.rate, d, (onset - n.t) / this.rate)
         }
       } else if (this.segmentHead) {
         for (const {
