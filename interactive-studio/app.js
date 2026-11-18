@@ -152,6 +152,21 @@ function loadParts(p) {
   $('part').innerHTML = options(song.parts.map(p => [p.id, p.name]), part?.id);
   if (!part) $('part').innerHTML = '<option>No parts assigned</option>'
 }
+let showingScore = false;
+async function showNotation() {
+  const generation = selection;
+  const selected = showingScore ? song.conductor : part;
+  if (!selected) return;
+  if (showingScore && !selected.pdfBlob && selected.pdfResource) {
+    const response = await fetch(selected.pdfResource);
+    if (!response.ok) throw Error('The conductor pages could not load.');
+    selected.pdfBlob = await response.blob()
+  }
+  if (generation !== selection || selected !== (showingScore ? song.conductor : part)) return;
+  $('scoreView').textContent = showingScore ? 'Instrumental part' : 'Conductor view';
+  await reader.select(selected);
+  await reader.highlight(map().find(m => m.t <= engine.position && m.end > engine.position)?.n, true)
+}
 async function selectSong(id, p, query) {
   const gen = ++selection;
   closeReference();
@@ -160,6 +175,8 @@ async function selectSong(id, p, query) {
   song = catalog.get(id) || catalog.get('first-light') || catalog.values().next().value;
   mode = modes(song).includes(query?.get('source')) ? query.get('source') : modes(song).includes(song.preferredMode) ?
     song.preferredMode : modes(song)[0] || 'click';
+  showingScore = false;
+  $('scoreView').hidden = !song.conductor;
   loadParts(p);
   $('song').innerHTML = options([...catalog.values()].map(s => [s.id, s.title]), song.id);
   $('mute').checked = false;
@@ -185,6 +202,7 @@ async function selectSong(id, p, query) {
     '<span>Practice click · independent tempo</span><button class="textbtn" id="showReference">Listen with score ↗</button>';
   $('showReference').onclick = openReference;
   setRange();
+  configureMixer(query?.get('hear'));
   if (query) {
     const speed = +query.get('speed');
     if (speed >= 50 && speed <= 150) {
@@ -206,7 +224,7 @@ async function selectSong(id, p, query) {
   engine.pos = bounds().from;
   drawState();
   try {
-    await reader.select(part)
+    await showNotation()
   } catch (e) {
     if (gen === selection) tell('Could not display this part: ' + e.message)
   }
@@ -214,6 +232,26 @@ async function selectSong(id, p, query) {
     reader.highlight(map().find(m => m.t <= engine.pos && m.end > engine.pos)?.n, false);
     drawState()
   }
+}
+
+function configureMixer(requested) {
+  const picker = $('isolation');
+  const label = $('isolationLabel');
+  label.hidden = mode !== 'synth' && mode !== 'stems';
+  const ids = new Set(mode === 'stems' ? (song.stems || []).map(s => s.part) : (song.notes || []).map(n => n.part));
+  const tracks = song.parts.filter(p => ids.has(p.id));
+  const groups = [...new Set(tracks.flatMap(p => [p.family, p.section]).filter(Boolean))];
+  const choices = [['all','Full ensemble'], ...groups.map(g => ['group:' + g,g]),
+    ...tracks.map(p => ['part:' + p.id,p.name])];
+  picker.innerHTML = options(choices, choices.some(([k]) => k === requested) ? requested : 'all');
+  function apply() {
+    const id = picker.value;
+    const selected = id.startsWith('group:') ? tracks.filter(p => p.family === id.slice(6) || p.section === id.slice(6)).map(p => p.id) :
+      id.startsWith('part:') ? [id.slice(5)] : null;
+    engine.isolate(selected)
+  }
+  picker.onchange = apply;
+  apply()
 }
 
 function validRange(a, b) {
@@ -289,7 +327,9 @@ function drawState() {
   $('mute').title = canMute() ? 'Mute the selected playback track' : 'Requires a separate track assigned to this part.';
   for (const id of ['song', 'part', 'share']) $(id).disabled = locked;
   if ($('sourcePick')) $('sourcePick').disabled = locked;
-  $('speedRead').textContent = (mode === 'synth' || click ? Math.round((song.bpm || 96) * engine.rate) + ' BPM · ' :
+  $('isolation').disabled = locked;
+  $('countLabel').textContent = (song.countBeats || 4) + ' clicks';
+  $('speedRead').textContent = (mode === 'synth' || click ? (song.countBeatQuarters === 2 ? 'Half note = ' : '') + Math.round((song.bpm || 96) * engine.rate / (song.countBeatQuarters || 1)) + (song.countBeatQuarters === 2 ? ' · ' : ' BPM · ') :
     '') + Math.round(engine.rate * 100) + '%';
   $('seek').max = total() || 1;
   $('statusDot').classList.toggle('hot', recording);
@@ -484,6 +524,7 @@ function showLink() {
       piece: song.id,
       part: part?.id,
       source: mode,
+      hear: $('isolation').value === 'all' ? null : $('isolation').value,
       from: $('start').value,
       to: $('end').value,
       loop: +$('loop').checked,
@@ -502,6 +543,7 @@ function showLink() {
 }
 
 function wire() {
+  $('scoreView').onclick = handle(async () => { showingScore = !showingScore; await showNotation() });
   $('closePlayer').onclick = closeReference;
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
@@ -511,7 +553,7 @@ function wire() {
     loadParts(e.target.value);
     engine.mute($('mute').checked ? muteKey() : '');
     if (!canMute()) $('mute').checked = false;
-    await reader.select(part);
+    await showNotation();
     drawState()
   });
   $('play').onclick = handle(() => start());
