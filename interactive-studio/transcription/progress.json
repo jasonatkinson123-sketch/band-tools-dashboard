@@ -1,5 +1,5 @@
 {
-  "piece": "Sleigh Ride · Michael Story",
+  "piece": "Sleigh Ride \u00b7 Michael Story",
   "measures": 120,
   "baseline": {
     "practicePackSHA256": "e42990f6f7472c29c42f2feedeecc310daf3eb25dbb51cf3a7ebf6f462578cd0",
@@ -14,5 +14,189 @@
   },
   "sourceParts": 14,
   "referencePDF": "38-page compilation of instrumental parts",
-  "status": "Opening preserved; full orchestration in progress. Musical data is held privately."
+  "status": "All 14 parts entered and reviewed through measure 120",
+  "enteredPartMeasures": 1680,
+  "verifiedPlayablePartMeasures": 1678,
+  "checkpoint": "checkpoints/story-120-reviewed.aes256.b64",
+  "checkpointSHA256": "cdc9a7ea9d3d84d75ed27e6675ce4f5f3ad8ca4b768689aa5afedef42ad48116",
+  "practicePackSHA256": "4be098728f394e00ec15b1955146c1c3e5f4420fc723aaa1ab1cc0fd2335fad4",
+  "parts": [
+    {
+      "part": "alto-sax",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "baritone-bc",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "baritone-tc",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "clarinet-1",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "clarinet-2",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "flute",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "horn",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "mallets",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "percussion-1",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "percussion-2",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "percussion-3",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "trombone",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    },
+    {
+      "part": "trumpet-1",
+      "entered": 120,
+      "verifiedPlayable": 118,
+      "verifiedRanges": [
+        [
+          1,
+          115
+        ],
+        [
+          118,
+          120
+        ]
+      ],
+      "liveCueRanges": [
+        [
+          116,
+          117
+        ]
+      ]
+    },
+    {
+      "part": "trumpet-2",
+      "entered": 120,
+      "verifiedPlayable": 120,
+      "verifiedRanges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "liveCueRanges": []
+    }
+  ]
 }
