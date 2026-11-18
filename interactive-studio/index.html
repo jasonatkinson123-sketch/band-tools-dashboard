@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#142e2b">
+  <title>Band Studio · Derby Middle School</title>
+  <link rel="stylesheet" href="./studio.css">
+  <script defer src="./vendor/zip/jszip.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="brand"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <div><strong>Band Studio</strong><small>Derby Middle School</small></div>
+    </div>
+    <nav aria-label="Workspace"><button data-view="practice" class="active"><i data-icon="score"></i>Practice
+        room</button><button data-view="library"><i data-icon="library"></i>Library</button><button data-view="takes"><i
+          data-icon="wave"></i>My takes</button></nav><button class="teacherNav" data-view="teacher"><i
+        data-icon="sliders"></i><span>Teacher desk</span></button>
+  </header>
+  <main>
+    <div id="notice" role="status" hidden></div>
+    <section id="practice" class="view">
+      <div class="pagehead">
+        <div>
+          <p class="eyebrow">Student workspace</p>
+          <h1>Practice room</h1>
+        </div>
+        <div class="selectors"><label>Composition<select id="song"></select></label><label>Instrumental part<select
+              id="part"></select></label></div>
+      </div>
+      <div class="desk">
+        <article class="reader panel">
+          <div class="cardhead">
+            <h2><i data-icon="score"></i>Sheet music</h2>
+            <div class="viewerTools"><button id="smaller" title="Zoom out" aria-label="Zoom out">−</button><span
+                id="zoomPct">100%</span><button id="bigger" title="Zoom in" aria-label="Zoom in">+</button><span
+                class="vr"></span><button id="expand" aria-label="Expand sheet music" title="Expand sheet music"><i
+                  data-icon="expand"></i></button></div>
+          </div>
+          <div class="scorewell" id="scorewell" tabindex="0" aria-label="Scrollable sheet music">
+            <div id="sheet"></div>
+          </div>
+          <div class="paperfoot"><span id="pageInfo"></span>
+            <div><button id="prevPage" aria-label="Previous page">‹</button><button id="nextPage"
+                aria-label="Next page">›</button></div>
+          </div>
+          <div class="transport">
+            <div class="referenceLine" id="referenceLine" hidden></div>
+            <div class="transportHead">
+              <div><span class="lightdot" id="statusDot"></span><strong id="transportStatus">Ready</strong></div><span
+                id="time">0:00 / 0:00</span>
+            </div><input id="seek" type="range" min="0" max="1" step=".01" value="0" aria-label="Playback position">
+            <div class="actions"><button id="restart" title="Restart passage" aria-label="Restart passage"><i
+                  data-icon="restart"></i></button><button id="play" class="primary"><i data-icon="play"></i><span>Play
+                  ensemble</span></button><button id="record" class="record"><i data-icon="record"></i><span>Record
+                  take</span></button><button class="quiet" id="share" title="Create practice link"
+                aria-label="Create practice link"><i data-icon="link"></i></button></div>
+          </div>
+        </article>
+        <aside>
+          <div class="panel" id="publisherPlayer" hidden>
+            <div class="cardhead">
+              <h2>Reference performance</h2><button id="closePlayer" aria-label="Close reference performance">×</button>
+            </div>
+            <div class="padded" id="publisherBody"></div>
+          </div>
+          <div class="panel controls">
+            <div class="cardhead">
+              <h2><i data-icon="sliders"></i>Practice settings</h2>
+            </div>
+            <div class="padded">
+              <div class="line"><label for="speed">Tempo</label><output id="speedRead"></output></div><input
+                type="range" id="speed" min="50" max="150" step="5" value="100">
+              <div class="rangeEnds"><span>Slower</span><button class="textbtn"
+                  id="resetSpeed">Reset</button><span>Faster</span></div>
+              <hr><label class="switchline"><span><i data-icon="count"></i>Count-off <small id="countLabel">4
+                    clicks</small></span><input id="count" type="checkbox" checked></label><label
+                class="switchline"><span><i data-icon="volume"></i>Mute my part</span><input id="mute"
+                  type="checkbox"></label>
+              <div class="line volumeRow"><label for="volume">Ensemble volume</label><output id="volRead">70%</output>
+              </div><input id="volume" type="range" min="0" max="100" value="70">
+              <hr><label class="switchline"><span><i data-icon="loop"></i>Loop passage</span><input id="loop"
+                  type="checkbox"></label><label class="smalllabel" for="passage">Practice section</label><select
+                id="passage"></select>
+              <div class="twocol"><label id="startLabel"><span>From measure</span><input id="start" type="number"
+                    min="1" value="1"></label><label id="endLabel"><span>Through measure</span><input id="end"
+                    type="number" min="1" value="1"></label></div>
+            </div>
+          </div>
+          <div class="panel micpanel">
+            <div class="cardhead">
+              <h2><i data-icon="mic"></i>Microphone</h2><span id="micState">Off</span>
+            </div>
+            <div class="padded">
+              <div class="meter" id="meter" role="meter" aria-label="Input level" aria-valuemin="0" aria-valuemax="100"
+                aria-valuenow="0"><b></b></div>
+              <div id="signal">Use headphones to record with the band.</div><button id="micBtn" class="wide">Enable
+                microphone</button>
+              <details>
+                <summary>Input settings</summary><label class="switchline">Smart microphone<input id="smart"
+                    type="checkbox" checked></label><label class="smalllabel" for="gain">Recording gain <output
+                    id="gainRead">1.0×</output></label><input id="gain" type="range" min="0.25" max="2" step=".05"
+                  value="1"><button id="calibrate" disabled>Measure room noise</button><label class="switchline"><span
+                    id="mixCaption">Include ensemble in take</span><input id="mix" type="checkbox" checked></label>
+              </details>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <div id="pieceInfo" class="contextbar"></div>
+      <div id="lastTake"></div>
+    </section>
+    <section id="library" class="view" hidden>
+      <div class="pagehead">
+        <div>
+          <p class="eyebrow">Student workspace</p>
+          <h1>Composition library</h1>
+        </div><button class="secondary packageBtn"><i data-icon="folder"></i>Open practice pack</button>
+      </div>
+      <div id="libraryList"></div>
+    </section>
+    <section id="takes" class="view" hidden>
+      <div class="pagehead">
+        <div>
+          <p class="eyebrow">On this device</p>
+          <h1>My takes</h1>
+        </div>
+      </div>
+      <div id="takesList"></div>
+      <h2 class="subheading">Practice history</h2>
+      <div id="history"></div>
+    </section>
+    <section id="teacher" class="view" hidden>
+      <div class="pagehead">
+        <div>
+          <p class="eyebrow">Derby Middle School</p>
+          <h1>Teacher desk</h1>
+        </div><button class="secondary packageBtn"><i data-icon="folder"></i>Open practice pack</button>
+      </div>
+      <div id="teacherBody"></div>
+    </section>
+  </main>
+  <footer><span>Derby Middle School <b>/</b> Band Studio</span><a
+      href="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/" target="_blank" rel="noopener">Band
+      dashboard ↗</a></footer>
+  <input hidden type="file" id="packInput" accept=".dms,.zip">
+  <dialog id="linkDialog">
+    <form method="dialog">
+      <h2>Practice link</h2>
+      <p id="linkHelp"></p><input id="linkValue" readonly aria-label="Practice link">
+      <div class="dialogactions"><button type="button" id="copyLink" class="primary">Copy
+          link</button><button>Done</button></div>
+    </form>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+
+</html>
