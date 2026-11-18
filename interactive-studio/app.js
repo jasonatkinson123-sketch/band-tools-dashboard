@@ -30,6 +30,7 @@ import {
   sections,
   importPack
 } from './model.js';
+const sleighId = 'sleigh-ride-story-120';
 const catalog = new Map(),
   builtins = new Map(),
   links = new URLSearchParams(location.search);
@@ -178,7 +179,9 @@ async function selectSong(id, p, query) {
   showingScore = false;
   $('scoreView').hidden = !song.conductor;
   loadParts(p);
-  $('song').innerHTML = options([...catalog.values()].map(s => [s.id, s.title]), song.id);
+  const choices = [...catalog.values()].map(s => [s.id, s.title]);
+  if (!catalog.has(sleighId)) choices.unshift([sleighId, 'Sleigh Ride · open class pack']);
+  $('song').innerHTML = options(choices, song.id);
   $('mute').checked = false;
   $('loop').checked = false;
   engine.rate = 1;
@@ -492,11 +495,19 @@ async function showTakes() {
 }
 
 function showLibrary() {
-  $('libraryList').innerHTML = '<div class="libraryGrid">' + [...catalog.values()].map(s =>
+  const classPack = catalog.has(sleighId) ? '' : `<article class="workcard">
+    <h2>Sleigh Ride</h2><p>Leroy Anderson · Arranged by Michael Story</p>
+    <p>Download Sleigh-Ride-120.dms from your Google Classroom assignment. Open it here to see your part and hear the band.</p>
+    <button id="openSleighPack" type="button">Open Sleigh Ride practice pack</button></article>`;
+  $('libraryList').innerHTML = '<div class="libraryGrid">' + classPack + [...catalog.values()].map(s =>
     '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + esc(s.title) + '</h2><p>' + esc(s
       .credit || s.kind) + '</p><div class="tags">' + esc(s.kind) + ' · ' + s.parts.length + ' parts · ' + (modes(s)
       .length ? 'Ensemble playback' : 'Notation & recording') + '</div><button data-open="' + esc(s.id) +
     '">Open in practice room →</button></article>').join('') + '</div>';
+  if ($('openSleighPack')) $('openSleighPack').onclick = () => {
+    if (pendingLink?.get('piece') !== sleighId) pendingLink = new URLSearchParams({piece: sleighId});
+    $('packInput').click();
+  };
   document.querySelectorAll('[data-open]').forEach(b => b.onclick = handle(async () => {
     await switchView('practice', b.dataset.open)
   }))
@@ -587,7 +598,13 @@ function wire() {
   $('closePlayer').onclick = closeReference;
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
-  $('song').onchange = handle(e => selectSong(e.target.value));
+  $('song').onchange = handle(async e => {
+    if (e.target.value === sleighId && !catalog.has(sleighId)) {
+      e.target.value = song.id;
+      await switchView('library');
+      $('openSleighPack').focus();
+    } else await selectSong(e.target.value);
+  });
   $('part').onchange = handle(async e => {
     pause();
     loadParts(e.target.value);
@@ -746,7 +763,12 @@ async function init() {
     tell('Open the matching practice pack from your teacher to use this assignment.');
     return
   }
-  const first = requested || (catalog.has('sleigh-ride') ? 'sleigh-ride' : 'first-light');
-  await selectSong(first, links.get('part') || (first === 'sleigh-ride' ? 'clarinet-2' : 'clarinet'), links)
+  if (!requested && !catalog.has(sleighId)) {
+    await selectSong('first-light');
+    await switchView('library');
+    return;
+  }
+  const first = requested || sleighId;
+  await selectSong(first, links.get('part') || (first === sleighId ? 'clarinet-2' : 'clarinet'), links)
 }
 init().catch(e => tell('Could not open the studio. ' + e.message));
