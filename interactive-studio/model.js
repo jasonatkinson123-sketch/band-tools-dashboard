@@ -102,6 +102,22 @@ export async function exportPack(song) {
     delete p.pdfResource;
     delete p.pages
   }
+  if (copy.conductor) {
+    if (!copy.conductor.pdfBlob && copy.conductor.pdfResource) {
+      const response = await fetch(copy.conductor.pdfResource);
+      if (!response.ok) throw Error('Conductor pages could not be exported.');
+      copy.conductor.pdfBlob = await response.blob()
+    }
+    if (copy.conductor.pdfBlob) copy.conductor.pdfBlob = file(copy.conductor.pdfBlob);
+    delete copy.conductor.pdfResource
+  }
+  if (!copy.bankFile && copy.bankResource) {
+    const response = await fetch(copy.bankResource);
+    if (!response.ok) throw Error('Instrument sounds could not be exported.');
+    copy.bankFile = await response.blob()
+  }
+  if (copy.bankFile) copy.bankFile = file(copy.bankFile);
+  delete copy.bankResource;
   if (copy.mix) copy.mix = file(copy.mix);
   for (const s of copy.stems || []) s.file = file(s.file);
   if (copy.structuredFile) copy.structuredFile = file(copy.structuredFile);
@@ -163,6 +179,22 @@ export async function importPack(file, builtins) {
     if (!parts.some(p => p.id === st.part) || !(st.duration > 0 && Number.isFinite(st.duration))) throw Error(
       'Invalid stem.')
   }
+  if (s.conductor) {
+    delete s.conductor.pdfResource;
+    delete s.conductor.pages;
+    s.conductor.pdfBlob = await blob(s.conductor.pdfBlob);
+    if (!Array.isArray(s.conductor.locations)) throw Error('Invalid conductor measure locations.')
+  }
+  delete s.bankResource;
+  if (s.bankFile) {
+    s.bankFile = await blob(s.bankFile);
+    const zones = Object.values(s.sampleZones || {});
+    if (s.bankFile.size > 24 * 1024 * 1024 || !zones.length || zones.length > 4096 ||
+      zones.some(z => !Array.isArray(z) || z.length !== 2 || !z.every(Number.isFinite) || z[0] < 0 || z[1] <= 0))
+      throw Error('Invalid instrument sound bank.')
+  }
+  if (s.countBeats != null && (!Number.isInteger(s.countBeats) || s.countBeats < 1 || s.countBeats > 12)) throw Error('Invalid count-off.');
+  if (s.countBeatQuarters != null && ![.25,.5,1,1.5,2,3,4].includes(s.countBeatQuarters)) throw Error('Invalid beat unit.');
   if (s.structuredFile) s.structuredFile = await blob(s.structuredFile);
   for (const m of modes(s)) {
     const rows = measures(s, m);
