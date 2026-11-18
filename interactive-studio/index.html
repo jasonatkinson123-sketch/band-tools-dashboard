@@ -80,6 +80,7 @@
                     clicks</small></span><input id="count" type="checkbox" checked></label><label
                 class="switchline"><span><i data-icon="volume"></i>Mute my part</span><input id="mute"
                   type="checkbox"></label>
+              <button type="button" id="soloPart" class="secondary" aria-pressed="false" hidden>Solo my part</button>
               <label id="isolationLabel" hidden>Hear<select id="isolation" aria-label="Isolate section or track"></select></label>
               <div class="line volumeRow"><label for="volume">Ensemble volume</label><output id="volRead">70%</output>
               </div><input id="volume" type="range" min="0" max="100" value="70">
@@ -148,6 +149,14 @@
       href="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/" target="_blank" rel="noopener">Band
       dashboard ↗</a></footer>
   <input hidden type="file" id="packInput" accept=".dms,.zip">
+  <dialog id="deskGate" aria-labelledby="deskGateTitle">
+    <form id="deskForm">
+      <h2 id="deskGateTitle">Unlock Teacher Desk</h2>
+      <label>Teacher PIN <input id="deskPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required></label>
+      <p id="deskError" role="status"></p>
+      <div class="dialogactions"><button type="button" id="cancelDesk">Cancel</button><button type="submit" class="primary">Unlock desk</button></div>
+    </form>
+  </dialog>
   <dialog id="linkDialog">
     <form method="dialog">
       <h2>Practice link</h2>
