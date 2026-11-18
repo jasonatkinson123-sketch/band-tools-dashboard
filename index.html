@@ -251,6 +251,29 @@
         <div class="stamp">band studio</div>
         <div class="arrow">↗</div>
       </a>
+      <div class="tool small" style="display:block">
+        <div class="name">Sleigh Ride · Google Classroom</div>
+        <label for="classroomStudio">Student practice link</label>
+        <input id="classroomStudio" readonly style="width:100%;box-sizing:border-box" aria-label="Student practice link">
+        <button type="button" id="copyStudio">Copy student link</button>
+        <p class="desc" id="copyStudioStatus" aria-live="polite">Attach the Sleigh-Ride-120.dms practice pack to the Classroom assignment. Students open it once on each device.</p>
+      </div>
+      <script>
+        (() => {
+          const field = document.getElementById('classroomStudio');
+          field.value = new URL('interactive-studio/?piece=sleigh-ride-story-120', document.baseURI).href;
+          document.getElementById('copyStudio').onclick = async () => {
+            const status = document.getElementById('copyStudioStatus');
+            try {
+              await navigator.clipboard.writeText(field.value);
+              status.textContent = 'Student link copied. Attach the practice pack when posting in Classroom.';
+            } catch {
+              field.focus(); field.select();
+              status.textContent = 'The link is selected. Use Copy on your device.';
+            }
+          };
+        })();
+      </script>
     </section>
 
     <div class="footer">
