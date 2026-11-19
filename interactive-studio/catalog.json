@@ -1,8 +1,3 @@
 [
-  "demo/demo.json",
-  {
-    "id": "sleigh-ride-story-120",
-    "title": "Sleigh Ride",
-    "studentURL": "https://dms-band-student-studio.jjason123.chatgpt.site/?piece=sleigh-ride-story-120"
-  }
+  "demo/demo.json"
 ]
