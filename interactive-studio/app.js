@@ -736,6 +736,29 @@ function wire() {
     }
   })
 }
+// The optional public distribution pack is loaded only when it is actually
+// present in this GitHub Pages deployment. Do not fall back to ChatGPT hosting.
+async function preloadSleighRide() {
+  if (catalog.has(sleighId)) return true;
+  const resource = './assets/Sleigh-Ride-120.dms';
+  let response;
+  try {
+    response = await fetch(resource);
+  } catch {
+    return false;
+  }
+  if (!response.ok) return false;
+  try {
+    const data = await response.blob();
+    const s = await importPack(data, builtins);
+    if (s.id !== sleighId) throw Error('The preloaded pack is not Sleigh Ride.');
+    catalog.set(s.id, s);
+    return true;
+  } catch (error) {
+    tell('Could not load the GitHub-hosted Sleigh Ride music: ' + error.message);
+    return false;
+  }
+}
 async function init() {
   wire();
   const index = await fetch('./catalog.json').then(r => r.json());
@@ -757,6 +780,7 @@ async function init() {
     tell('Local storage is unavailable. Practice playback still works.')
   }
   const requested = links.get('piece');
+  if ((!requested || requested === sleighId) && !catalog.has(sleighId)) await preloadSleighRide();
   if (classroom.has(requested) && !links.has('rev')) {
     catalog.delete(requested);
     return selectSong(requested, links.get('part'), links);
