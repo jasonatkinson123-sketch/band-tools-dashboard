@@ -766,7 +766,7 @@ async function init() {
     pendingLink = links;
     await selectSong('first-light');
     await switchView('library');
-    tell('Open the matching practice pack from your teacher to use this assignment.');
+    tell(requested === sleighId ? 'Sleigh Ride: open the authorized .dms practice pack from Classroom once. Future visits on this browser open directly.' : 'Open the matching practice pack from your teacher to use this assignment.');
     return
   }
   if (!requested && !catalog.has(sleighId)) {
