@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#142e2b">
   <title>Band Studio · Derby Middle School</title>
-  <link rel="stylesheet" href="./studio.css?v=level-up-1">
+  <link rel="stylesheet" href="./studio.css?v=duets-1">
   <script defer src="./vendor/zip/jszip.min.js"></script>
 </head>
 
@@ -43,6 +43,11 @@
           <div id="lesson" hidden>
             <label for="level">LEVEL UP!</label>
             <select id="level"></select>
+            <div id="duetControls" hidden>
+              <label>My line<select id="duetRole"><option value="a">Part A</option><option value="b">Part B</option></select></label>
+              <label>Partner instrument<select id="duetPartner"></select></label>
+              <label>Listen to<select id="duetHear"><option value="all">Hear both</option><option value="mine">Hear my part</option><option value="partner">Hear my partner</option></select></label>
+            </div>
             <p id="levelCue"></p>
           </div>
           <div class="scorewell" id="scorewell" tabindex="0" aria-label="Scrollable sheet music">
@@ -172,7 +177,7 @@
           link</button><button>Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="./app.js?v=beginner-pack-1"></script>
+  <script type="module" src="./app.js?v=duets-1"></script>
 </body>
 
 </html>

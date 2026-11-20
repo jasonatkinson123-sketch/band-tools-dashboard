@@ -1,4 +1,4 @@
-import { levelUpId, beginnerId, isPackId, loadLevel, compactScore } from './level-up.js?v=packs-2';
+import { levelUpId, beginnerId, duetId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=duets-1';
 import {
   $,
   esc,
@@ -33,7 +33,7 @@ import {
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
 const classroom = new Map();
-const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beginnerId, 'Beginner Pack']];
+const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beginnerId, 'Beginner Pack'], [duetId, 'Holiday Duet Lab']];
 const isPack = () => isPackId(song?.id);
 const catalog = new Map(),
   builtins = new Map(),
@@ -186,19 +186,24 @@ async function selectSong(id, p, query) {
   closeReference();
   pause();
   engine.reset();
-  const nextSong = isPackId(id) ? await loadLevel(id, p, query?.get(id === beginnerId ? 'tune' : 'level')) :
+  const nextSong = isPackId(id) ? await loadLevel(id, p, query?.get(lessonKey(id)), query) :
     catalog.get(id) || catalog.get('first-light') || catalog.values().next().value;
   if (gen !== selection) return;
   song = nextSong;
   const technique = isPack();
   $('practice').classList.toggle('technique', technique);
   $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
+  $('duetControls').hidden = !song.duet;
+  if (song.duet) {
+    $('duetRole').value = song.duet.role;
+    $('duetPartner').innerHTML = options(song.parts.map(p => [p.id, p.name]), song.duet.partner);
+  }
   $('finishLevel').hidden = true;
-  document.querySelector('label[for="volume"]').textContent = technique ? 'Instrument volume' : 'Ensemble volume';
+  document.querySelector('label[for="volume"]').textContent = song.duet ? 'Duet volume' : technique ? 'Instrument volume' : 'Ensemble volume';
   if (technique) {
     mic.disable();
     $('level').innerHTML = options(song.levelTitles.map((title, i) => [i+1, (i+1) + ' · ' + title]), song.level);
-    document.querySelector('label[for="level"]').textContent = song.id === beginnerId ? 'Choose a tune' : 'LEVEL UP!';
+    document.querySelector('label[for="level"]').textContent = song.duet ? 'Choose an arrangement' : song.id === beginnerId ? 'Choose a tune' : 'LEVEL UP!';
     $('levelCue').textContent = song.cue;
     $('levelPdf').href = song.pdf;
   }
@@ -223,7 +228,7 @@ async function selectSong(id, p, query) {
         'Teacher-mapped measures' : 'Loop by seconds until a timing map is added.')) + (ms.length > 1 ?
       ' <label>Playback source <select id="sourcePick">' + options(ms.map(x => [x, modeName[x]]), mode) +
       '</select></label>' : '');
-  if (technique) $('pieceInfo').textContent = part.name + ' · ' + map().length + ' measures · Solo practice';
+  if (technique) $('pieceInfo').textContent = part.name + ' · ' + map().length + ' measures · ' + (song.duet ? 'Part ' + song.duet.role.toUpperCase() : 'Solo practice');
   if ($('tryDemo')) $('tryDemo').onclick = handle(() => selectSong('first-light'));
   if ($('sourcePick')) $('sourcePick').onchange = handle(e => selectSong(song.id, part?.id, new URLSearchParams({
     source: e.target.value
@@ -233,7 +238,7 @@ async function selectSong(id, p, query) {
     '<span>Practice click · independent tempo</span><button class="textbtn" id="showReference">Listen with score ↗</button>';
   $('showReference').onclick = openReference;
   setRange();
-  configureMixer(technique ? 'mine' : query?.get('hear'));
+  configureMixer(technique && !song.duet ? 'mine' : query?.get('hear'));
   if (query) {
     if (technique) $('loop').checked = query.get('loop') === '1';
     const speed = +query.get('speed');
@@ -249,7 +254,7 @@ async function selectSong(id, p, query) {
         $('loop').checked = query.get('loop') === '1'
       }
     }
-    $('mute').checked = query.get('mute') === '1' && $('isolation').value !== 'mine' && canMute();
+    $('mute').checked = !song.duet && query.get('mute') === '1' && $('isolation').value !== 'mine' && canMute();
     if (query.has('count')) $('count').checked = query.get('count') === '1'
   }
   engine.mute($('mute').checked ? muteKey() : '');
@@ -269,6 +274,19 @@ async function selectSong(id, p, query) {
 function configureMixer(requested) {
   const picker = $('isolation');
   const label = $('isolationLabel');
+  if (song.duet) {
+    const hear = $('duetHear');
+    hear.value = ['all', 'mine', 'partner'].includes(requested) ? requested : 'all';
+    picker.innerHTML = hear.innerHTML;
+    hear.onchange = () => {
+      picker.value = hear.value;
+      const track = hear.value === 'mine' ? part.id : song.duet.partnerTrack;
+      engine.isolate(hear.value === 'all' ? null : [track]);
+      drawState();
+    };
+    hear.onchange();
+    return;
+  }
   label.hidden = mode !== 'synth' && mode !== 'stems';
   const ids = new Set(mode === 'stems' ? (song.stems || []).map(s => s.part) : (song.notes || []).map(n => n.part));
   const tracks = song.parts.filter(p => ids.has(p.id));
@@ -347,7 +365,7 @@ function drawState() {
     has = total() > 0,
     click = mode === 'click';
   $('play').innerHTML = icon(playing ? 'pause' : 'play') + '<span>' + (busy ? 'Preparing…' : playing ? 'Pause' : click ?
-    'Start metronome' : $('isolation').value === 'mine' ? 'Play my part' : 'Play ensemble') + '</span>';
+    'Start metronome' : song.duet ? ({all: 'Play both parts', mine: 'Play my part', partner: 'Play my partner'}[$('duetHear').value]) : $('isolation').value === 'mine' ? 'Play my part' : 'Play ensemble') + '</span>';
   $('play').disabled = locked;
   $('restart').disabled = $('stopExercise').disabled = $('level').disabled = locked;
   $('record').disabled = busy;
@@ -365,7 +383,7 @@ function drawState() {
   $('soloPart').disabled = locked;
   $('mute').disabled = busy || !canMute() || $('isolation').value === 'mine';
   $('mute').title = canMute() ? 'Mute the selected playback track' : 'Requires a separate track assigned to this part.';
-  for (const id of ['song', 'part', 'share']) $(id).disabled = locked;
+  for (const id of ['song', 'part', 'share', 'duetRole', 'duetPartner', 'duetHear']) $(id).disabled = locked;
   if ($('sourcePick')) $('sourcePick').disabled = locked;
   $('isolation').disabled = locked;
   $('countLabel').textContent = (song.countBeats || 4) + ' clicks';
@@ -526,7 +544,7 @@ async function showTakes() {
 
 function showLibrary() {
   const cards = studentChoices.map(([id, title]) => {
-    const description = id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
+    const description = id === duetId ? 'Three holiday tunes for two players' : id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
     return '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + title +
       '</h2><p>' + description + '</p><button data-open="' + id + '">Open in practice room →</button></article>';
   });
@@ -572,8 +590,9 @@ function showLink() {
   u.hash = '';
   for (const [k, v] of Object.entries({
       piece: song.id,
-      level: song.id === levelUpId ? song.level : null,
-      tune: song.id === beginnerId ? song.level : null,
+      ...(isPack() ? {[lessonKey(song.id)]: song.level} : {}),
+      role: song.duet?.role,
+      partner: song.duet?.partner,
       part: part?.id,
       source: mode,
       hear: $('isolation').value === 'all' ? null : $('isolation').value,
@@ -625,9 +644,11 @@ function wire() {
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
   $('song').onchange = handle(e => selectSong(e.target.value, part?.id));
   const changeLevel = (id, level) => selectSong(song.id, id, new URLSearchParams({
-    [song.id === beginnerId ? 'tune' : 'level']: level, speed: $('speed').value, count: +$('count').checked,
+    [lessonKey(song.id)]: level,
+    ...(song.duet ? {role: $('duetRole').value, partner: $('duetPartner').value, hear: $('duetHear').value} : {}), speed: $('speed').value, count: +$('count').checked,
     loop: +$('loop').checked
   }));
+  $('duetRole').onchange = $('duetPartner').onchange = handle(() => changeLevel($('part').value, $('level').value));
   $('level').onchange = handle(e => changeLevel($('part').value, e.target.value));
   $('stopExercise').onclick = () => {
     pause();

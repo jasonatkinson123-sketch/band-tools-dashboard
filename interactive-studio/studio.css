@@ -1249,3 +1249,6 @@ dialog input {
   #finishLevel:not([hidden]) span { animation:level-finish .7s ease-out both }
   @keyframes level-finish { 0% { opacity:0; transform:translateY(.5em) scale(.7) } 60% { transform:translateY(-.18em) scale(1.12) } 100% { opacity:1; transform:none } }
 }
+
+#duetControls:not([hidden]) { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); gap:.7rem; margin-top:.8rem }
+#duetControls select { display:block; width:100%; margin-top:.3rem }
