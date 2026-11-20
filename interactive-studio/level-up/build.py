@@ -19,7 +19,7 @@ import verovio
 from scores import INSTRUMENTS, RHYTHMS, SCORES, TEMPOS, TITLES
 
 OUT = Path(__file__).resolve().parent
-VALUES = {'q': (2, 'quarter'), 'h': (4, 'half'), 'e': (1, 'eighth'), 'd': (3, 'quarter')}
+VALUES = {'q': (2, 'quarter'), 'h': (4, 'half'), 'w': (8, 'whole'), 'e': (1, 'eighth'), 'd': (3, 'quarter')}
 NATURALS = dict(zip('CDEFGAB', (0, 2, 4, 5, 7, 9, 11)))
 SVG = '{http://www.w3.org/2000/svg}'
 
@@ -32,7 +32,13 @@ def add(parent, tag, value=None, **attrs):
 
 
 def compile_exercise(pid, level):
-    name, clef, fifths, shift, program = INSTRUMENTS[pid]
+    cue, melody = SCORES[pid][level]
+    assert len(melody.split('|')) == 4
+    return compile_part(pid, INSTRUMENTS[pid], melody, RHYTHMS[level], TEMPOS[level], cue)
+
+
+def compile_part(pid, instrument, melody, rhythms, tempo, cue):
+    name, clef, fifths, shift, program = instrument
     drum = pid == 'snare'
     score = ET.Element('score-partwise', version='4.0')
     listed = add(add(score, 'part-list'), 'score-part', id='P1')
@@ -45,20 +51,18 @@ def compile_exercise(pid, level):
     part = add(score, 'part', id='P1')
     midi = mido.MidiFile(type=0, ticks_per_beat=480)
     track = midi.add_track(name.replace('♭', 'b'))
-    track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(TEMPOS[level])))
+    track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(tempo)))
     track.append(mido.MetaMessage('time_signature', numerator=4, denominator=4))
     channel = 9 if drum else 0
     if not drum:
         track.append(mido.Message('program_change', program=program))
-    cue, melody = SCORES[pid][level]
     bars = melody.split('|')
-    assert len(bars) == 4
     tick = last_event = 0
     pitches = []
     accents = []
-    for number, (bar, rhythm) in enumerate(zip(bars, RHYTHMS[level].split('|'), strict=True), 1):
+    for number, (bar, rhythm) in enumerate(zip(bars, rhythms.split('|'), strict=True), 1):
         tokens = bar.split()
-        assert len(tokens) == len(rhythm), (pid, level, number)
+        assert len(tokens) == len(rhythm), (pid, number)
         assert sum(VALUES[r][0] for r in rhythm) == 8
         measure = add(part, 'measure', number=str(number))
         if number == 1:
@@ -141,31 +145,35 @@ def compile_exercise(pid, level):
                 track.append(mido.Message('note_off', channel=channel, note=sound, time=gate))
                 last_event = tick + gate
             tick += length
-        if number == 4:
+        if number == len(bars):
             add(add(measure, 'barline', location='right'), 'bar-style', 'light-heavy')
-    assert tick == 16 * 480
+    assert tick == len(bars) * 4 * 480
     track.append(mido.MetaMessage('end_of_track', time=tick-last_event))
     buf = io.BytesIO()
     midi.save(file=buf)
     return ET.tostring(score, encoding='unicode'), buf.getvalue(), pitches, accents, cue
 
 
-def engrave(xml, mobile=False):
-    if mobile:
+def engrave(xml, mobile=False, bars=None):
+    if bars:
+        per_row = 2 if mobile else 4
+        for n in range(1 + per_row, bars + 1, per_row):
+            xml = xml.replace(f'<measure number="{n}">', f'<measure number="{n}"><print new-system="yes"/>')
+    elif mobile:
         xml = xml.replace('<measure number="3">', '<measure number="3"><print new-system="yes"/>')
     tk = verovio.toolkit()
-    tk.setOptions({'xmlIdChecksum': True, 'pageWidth': 960 if mobile else 1720, 'pageHeight': 500,
+    tk.setOptions({'xmlIdChecksum': True, 'pageWidth': 960 if mobile else 1720, 'pageHeight': 4000 if bars else 500,
                    'pageMarginLeft': 14, 'pageMarginRight': 14, 'pageMarginTop': 10,
-                   'pageMarginBottom': 10, 'adjustPageHeight': True, 'breaks': 'encoded' if mobile else 'auto',
+                   'pageMarginBottom': 10, 'adjustPageHeight': True, 'breaks': 'encoded' if mobile or bars else 'auto',
                    'header': 'none', 'footer': 'none', 'minLastJustification': 0,
                    'svgViewBox': True, 'scale': 100})
     assert tk.loadData(xml) and tk.getPageCount() == 1
     svg = tk.renderToSVG(1)
     root = ET.fromstring(svg)
     system = root.findall(f'.//{SVG}g[@class="system"]')
-    assert len(system) == (2 if mobile else 1)
+    assert len(system) == (math.ceil(bars/per_row) if bars else (2 if mobile else 1))
     measures = [m for row in system for m in row.findall(f'{SVG}g[@class="measure"]')]
-    assert len(measures) == 4
+    assert len(measures) == (bars or 4)
     vx, vy, w, h = map(float, root.get('viewBox').split())
     inner = root.find(f'{SVG}svg')
     iw = float(inner.get('viewBox').split()[2])
@@ -183,6 +191,13 @@ def engrave(xml, mobile=False):
     svg = re.sub(r'<svg class="definition-scale"([^>]*?) viewBox="[^"]+">',
                  r'<g class="definition-scale"\1 transform="scale(.1)">', svg, count=1)
     svg = re.sub(r'</svg>\s*</svg>\s*$', '</g>\n</svg>\n', svg)
+    if bars:
+        # Each system's first staff line anchors its vertical hit area.
+        starts = [float(re.search(r'M[\d.]+ ([-\d.]+)', row.find(f'.//{SVG}g[@class="staff"]/{SVG}path').get('d'))[1]) * .1 for row in system]
+        boundaries = [0] + [start - starts[0] for start in starts[1:]] + [h]
+        for i, box in enumerate(boxes):
+            row = i // per_row
+            box.update(y=boundaries[row], h=boundaries[row+1]-boundaries[row])
     return svg, dict(width=w, height=h, boxes=boxes)
 
 

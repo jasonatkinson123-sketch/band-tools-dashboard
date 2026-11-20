@@ -1,4 +1,4 @@
-import { levelUpId, loadLevel, compactScore } from './level-up.js';
+import { levelUpId, beginnerId, isPackId, loadLevel, compactScore } from './level-up.js?v=packs-2';
 import {
   $,
   esc,
@@ -33,8 +33,8 @@ import {
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
 const classroom = new Map();
-const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!']];
-const isLevel = () => song?.id === levelUpId;
+const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beginnerId, 'Beginner Pack']];
+const isPack = () => isPackId(song?.id);
 const catalog = new Map(),
   builtins = new Map(),
   links = new URLSearchParams(location.search);
@@ -47,7 +47,7 @@ let song, part, mode = 'none',
   lastStatus = '',
   pendingLink = null;
 const engine = new Transport(() => {
-  if (isLevel() && song.level === 6 && engine.to >= total() - .001) $('finishLevel').hidden = false;
+  if (song?.id === levelUpId && song.level === 6 && engine.to >= total() - .001) $('finishLevel').hidden = false;
   mic.stop();
   endHistory();
   drawState()
@@ -162,7 +162,7 @@ let showingScore = false;
 async function showNotation() {
   const generation = selection;
   const selected = showingScore ? song.conductor : part;
-  if (isLevel() && selected) selected.pages = [compactScore.matches ? song.mobilePage : song.page];
+  if (isPack() && selected) selected.pages = [compactScore.matches ? song.mobilePage : song.page];
   if (!selected) return;
   if (showingScore && !selected.pdfBlob && selected.pdfResource) {
     const response = await fetch(selected.pdfResource);
@@ -186,11 +186,11 @@ async function selectSong(id, p, query) {
   closeReference();
   pause();
   engine.reset();
-  const nextSong = id === levelUpId ? await loadLevel(p, query?.get('level')) :
+  const nextSong = isPackId(id) ? await loadLevel(id, p, query?.get(id === beginnerId ? 'tune' : 'level')) :
     catalog.get(id) || catalog.get('first-light') || catalog.values().next().value;
   if (gen !== selection) return;
   song = nextSong;
-  const technique = isLevel();
+  const technique = isPack();
   $('practice').classList.toggle('technique', technique);
   $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
   $('finishLevel').hidden = true;
@@ -198,6 +198,7 @@ async function selectSong(id, p, query) {
   if (technique) {
     mic.disable();
     $('level').innerHTML = options(song.levelTitles.map((title, i) => [i+1, (i+1) + ' · ' + title]), song.level);
+    document.querySelector('label[for="level"]').textContent = song.id === beginnerId ? 'Choose a tune' : 'LEVEL UP!';
     $('levelCue').textContent = song.cue;
     $('levelPdf').href = song.pdf;
   }
@@ -222,7 +223,7 @@ async function selectSong(id, p, query) {
         'Teacher-mapped measures' : 'Loop by seconds until a timing map is added.')) + (ms.length > 1 ?
       ' <label>Playback source <select id="sourcePick">' + options(ms.map(x => [x, modeName[x]]), mode) +
       '</select></label>' : '');
-  if (technique) $('pieceInfo').textContent = part.name + ' · Four measures · Solo practice';
+  if (technique) $('pieceInfo').textContent = part.name + ' · ' + map().length + ' measures · Solo practice';
   if ($('tryDemo')) $('tryDemo').onclick = handle(() => selectSong('first-light'));
   if ($('sourcePick')) $('sourcePick').onchange = handle(e => selectSong(song.id, part?.id, new URLSearchParams({
     source: e.target.value
@@ -234,6 +235,7 @@ async function selectSong(id, p, query) {
   setRange();
   configureMixer(technique ? 'mine' : query?.get('hear'));
   if (query) {
+    if (technique) $('loop').checked = query.get('loop') === '1';
     const speed = +query.get('speed');
     if (speed >= 50 && speed <= 150) {
       $('speed').value = speed;
@@ -406,7 +408,7 @@ async function start(record = false, withCount = true) {
   }
   if (record && engine.playing) pause();
   busy = true;
-  if (isLevel()) $('finishLevel').hidden = true;
+  if (isPack()) $('finishLevel').hidden = true;
   drawState();
   let didRecord = false;
   try {
@@ -434,7 +436,7 @@ async function start(record = false, withCount = true) {
         }));
         didRecord = true
       }
-      if (!isLevel()) historyStart = Date.now()
+      if (!isPack()) historyStart = Date.now()
     };
     if (total() || mode === 'click' && (!record || included)) {
       engine.start({
@@ -524,7 +526,7 @@ async function showTakes() {
 
 function showLibrary() {
   const cards = studentChoices.map(([id, title]) => {
-    const description = id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
+    const description = id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
     return '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + title +
       '</h2><p>' + description + '</p><button data-open="' + id + '">Open in practice room →</button></article>';
   });
@@ -560,7 +562,7 @@ async function switchView(v, pieceId, partId, query, unlocked = false) {
   } else if (v === 'library') showLibrary();
   else if (v === 'takes') await showTakes();
   else if (pieceId) await selectSong(pieceId, partId, query);
-  else if (song && !isLevel() && catalog.get(song.id) !== song) await selectSong(song.id, part?.id);
+  else if (song && !isPack() && catalog.get(song.id) !== song) await selectSong(song.id, part?.id);
   window.scrollTo(0, 0)
 }
 
@@ -570,7 +572,8 @@ function showLink() {
   u.hash = '';
   for (const [k, v] of Object.entries({
       piece: song.id,
-      level: isLevel() ? song.level : null,
+      level: song.id === levelUpId ? song.level : null,
+      tune: song.id === beginnerId ? song.level : null,
       part: part?.id,
       source: mode,
       hear: $('isolation').value === 'all' ? null : $('isolation').value,
@@ -621,9 +624,9 @@ function wire() {
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
   $('song').onchange = handle(e => selectSong(e.target.value, part?.id));
-  const changeLevel = (id, level) => selectSong(levelUpId, id, new URLSearchParams({
-    level, speed: $('speed').value, count: +$('count').checked,
-    loop: +$('loop').checked, from: 1, to: 4
+  const changeLevel = (id, level) => selectSong(song.id, id, new URLSearchParams({
+    [song.id === beginnerId ? 'tune' : 'level']: level, speed: $('speed').value, count: +$('count').checked,
+    loop: +$('loop').checked
   }));
   $('level').onchange = handle(e => changeLevel($('part').value, e.target.value));
   $('stopExercise').onclick = () => {
@@ -633,10 +636,10 @@ function wire() {
     drawState()
   };
   compactScore.addEventListener('change', handle(async () => {
-    if (isLevel()) await showNotation()
+    if (isPack()) await showNotation()
   }));
   $('part').onchange = handle(async e => {
-    if (isLevel()) return changeLevel(e.target.value, $('level').value);
+    if (isPack()) return changeLevel(e.target.value, $('level').value);
     pause();
     loadParts(e.target.value);
     configureMixer($('isolation').value);
@@ -815,7 +818,7 @@ async function init() {
   // Existing unversioned Classroom links also open the current student repertoire.
   const linked = links.get('piece');
   const requested = linked === sleighId && !links.has('rev') ? 'first-light' : linked;
-  if (requested === levelUpId) return selectSong(requested, links.get('part'), links);
+  if (isPackId(requested)) return selectSong(requested, links.get('part'), links);
   if (requested === sleighId && !catalog.has(sleighId)) await preloadSleighRide();
   if (classroom.has(requested) && !links.has('rev')) {
     catalog.delete(requested);
