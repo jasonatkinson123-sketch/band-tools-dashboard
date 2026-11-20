@@ -1228,3 +1228,24 @@ dialog input {
 .editcard details button {
   margin-top: 8px
 }
+
+#lesson {
+  padding: 1rem 1.25rem .8rem;
+  border-top: 1px solid #dbe2d9;
+}
+#lesson label { display:block; font-weight:700; color:#38624b; font-size:.8rem; letter-spacing:.1em; margin-bottom:.3rem }
+#level { width: min(100%, 23rem); font-size:1.05rem; font-weight:650 }
+#levelCue { margin:.55rem 0 0; color:#314738; line-height:1.45 }
+.technique .scorewell { display:grid; align-content:center; min-height:0; height:auto; padding:clamp(.8rem,3vw,2rem) .7rem }
+.technique .reader.expanded .scorewell { flex:1; min-height:0 }
+.technique .paperfoot { flex-wrap:wrap; gap:.6rem; padding:.65rem 1rem }
+#levelPdf { color:#28573e; font-weight:650; text-underline-offset:.15em }
+.technique #record, .technique .micpanel, .technique #isolationLabel,
+.technique #soloPart, .technique label:has(#mute), .technique .twocol,
+.technique #passage, .technique label[for="passage"], .technique .paperfoot>div { display:none }
+#finishLevel { padding:.75rem 1rem; text-align:center; color:#234e34; background:#e8f1df; font-weight:700 }
+#finishLevel span { display:inline-block; margin-right:.55rem; color:#38744d }
+@media (prefers-reduced-motion:no-preference) {
+  #finishLevel:not([hidden]) span { animation:level-finish .7s ease-out both }
+  @keyframes level-finish { 0% { opacity:0; transform:translateY(.5em) scale(.7) } 60% { transform:translateY(-.18em) scale(1.12) } 100% { opacity:1; transform:none } }
+}

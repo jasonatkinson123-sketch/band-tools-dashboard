@@ -1,4 +1,4 @@
-The dashboard branch serves this directory at /interactive-studio/. Download the source ZIP for the Cloudflare dist layout, regression tests and deployment instructions.
+GitHub Pages serves this directory from the dashboard’s main branch at /interactive-studio/. The source ZIP holds the earlier portable studio and its regression tests.
 
 # DMS Interactive Band Studio
 
@@ -15,6 +15,12 @@ The classroom distribution includes First Light, an original 16-bar, nine-part s
 Choose the composition and written part. Start the ensemble or, for a printed part alone, start the independent practice metronome. Choose a section or endpoints to restrict playback. Loop repeats the range. With a linked measure map the clock displays the measure. Verified page geometry also enables score highlighting and automatic page changes. Full recordings can be slowed using pitch-preserving time stretching. Separate tracks allow muting the selected part.
 
 Use headphones and select Record take. The browser requests microphone access. Input settings control recording gain, room-noise calibration, and whether to include the accompaniment. Smart metering uses a median room baseline and reports clipping. It does not remove nearby instruments from the recording. My takes supports replay, download, and deletion. Data is tied to this browser profile and origin. Clearing site data removes local material; downloaded takes and exported practice packs are portable.
+
+## LEVEL UP!
+
+Choose an instrument and level in the practice room. The player decodes one solo MIDI sequence through the same transport as First Light. The exercise link includes the instrument, level, tempo, count-off and loop settings. The PDF control opens the complete six-level sheet for the selected instrument. LEVEL UP! uses no microphone or practice history.
+
+Edit written pitches, rhythms, sticking and coaching cues in `level-up/scores.py`. Run `python level-up/build.py` and `python level-up/verify.py` from this directory. The build uses Verovio 6.4.1, mido, CairoSVG, PyMuPDF and DejaVu Sans. Commit the generated assets with the musical source. The PDF embeds the desktop SVG engraving. Phones use the same score with a system break after measure two.
 
 ## Teacher workflow
 

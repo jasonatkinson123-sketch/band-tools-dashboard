@@ -1,3 +1,4 @@
+import { levelUpId, loadLevel, compactScore } from './level-up.js';
 import {
   $,
   esc,
@@ -32,6 +33,8 @@ import {
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
 const classroom = new Map();
+const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!']];
+const isLevel = () => song?.id === levelUpId;
 const catalog = new Map(),
   builtins = new Map(),
   links = new URLSearchParams(location.search);
@@ -44,6 +47,7 @@ let song, part, mode = 'none',
   lastStatus = '',
   pendingLink = null;
 const engine = new Transport(() => {
+  if (isLevel() && song.level === 6 && engine.to >= total() - .001) $('finishLevel').hidden = false;
   mic.stop();
   endHistory();
   drawState()
@@ -158,6 +162,7 @@ let showingScore = false;
 async function showNotation() {
   const generation = selection;
   const selected = showingScore ? song.conductor : part;
+  if (isLevel() && selected) selected.pages = [compactScore.matches ? song.mobilePage : song.page];
   if (!selected) return;
   if (showingScore && !selected.pdfBlob && selected.pdfResource) {
     const response = await fetch(selected.pdfResource);
@@ -181,15 +186,28 @@ async function selectSong(id, p, query) {
   closeReference();
   pause();
   engine.reset();
-  song = catalog.get(id) || catalog.get('first-light') || catalog.values().next().value;
+  const nextSong = id === levelUpId ? await loadLevel(p, query?.get('level')) :
+    catalog.get(id) || catalog.get('first-light') || catalog.values().next().value;
+  if (gen !== selection) return;
+  song = nextSong;
+  const technique = isLevel();
+  $('practice').classList.toggle('technique', technique);
+  $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
+  $('finishLevel').hidden = true;
+  document.querySelector('label[for="volume"]').textContent = technique ? 'Instrument volume' : 'Ensemble volume';
+  if (technique) {
+    mic.disable();
+    $('level').innerHTML = options(song.levelTitles.map((title, i) => [i+1, (i+1) + ' · ' + title]), song.level);
+    $('levelCue').textContent = song.cue;
+    $('levelPdf').href = song.pdf;
+  }
   mode = modes(song).includes(query?.get('source')) ? query.get('source') : modes(song).includes(song.preferredMode) ?
     song.preferredMode : modes(song)[0] || 'click';
   showingScore = false;
   $('scoreView').hidden = !song.conductor;
-  loadParts(p);
-  const choices = [...catalog.values()].map(s => [s.id, s.title]);
-  if (classroom.has(sleighId) && !catalog.has(sleighId)) choices.unshift([sleighId, 'Sleigh Ride']);
-  $('song').innerHTML = options(choices, song.id);
+  loadParts(technique ? song.selectedPart : p);
+  $('song').innerHTML = options(studentChoices, song.id);
+  $('song').value = song.id;
   $('mute').checked = false;
   $('loop').checked = false;
   engine.rate = 1;
@@ -204,6 +222,7 @@ async function selectSong(id, p, query) {
         'Teacher-mapped measures' : 'Loop by seconds until a timing map is added.')) + (ms.length > 1 ?
       ' <label>Playback source <select id="sourcePick">' + options(ms.map(x => [x, modeName[x]]), mode) +
       '</select></label>' : '');
+  if (technique) $('pieceInfo').textContent = part.name + ' · Four measures · Solo practice';
   if ($('tryDemo')) $('tryDemo').onclick = handle(() => selectSong('first-light'));
   if ($('sourcePick')) $('sourcePick').onchange = handle(e => selectSong(song.id, part?.id, new URLSearchParams({
     source: e.target.value
@@ -213,7 +232,7 @@ async function selectSong(id, p, query) {
     '<span>Practice click · independent tempo</span><button class="textbtn" id="showReference">Listen with score ↗</button>';
   $('showReference').onclick = openReference;
   setRange();
-  configureMixer(query?.get('hear'));
+  configureMixer(technique ? 'mine' : query?.get('hear'));
   if (query) {
     const speed = +query.get('speed');
     if (speed >= 50 && speed <= 150) {
@@ -223,7 +242,7 @@ async function selectSong(id, p, query) {
     if (query.has('from') && query.has('to')) {
       const from = +query.get('from'),
         to = +query.get('to');
-      if (validRange(from, to)) {
+      if (validRange(from, to) && (!technique || (from === 1 && to === map().length))) {
         setCustom(from, to);
         $('loop').checked = query.get('loop') === '1'
       }
@@ -328,7 +347,7 @@ function drawState() {
   $('play').innerHTML = icon(playing ? 'pause' : 'play') + '<span>' + (busy ? 'Preparing…' : playing ? 'Pause' : click ?
     'Start metronome' : $('isolation').value === 'mine' ? 'Play my part' : 'Play ensemble') + '</span>';
   $('play').disabled = locked;
-  $('restart').disabled = locked;
+  $('restart').disabled = $('stopExercise').disabled = $('level').disabled = locked;
   $('record').disabled = busy;
   $('record').classList.toggle('live', recording);
   $('record').innerHTML = icon(recording ? 'stop' : 'record') + '<span>' + (recording ? 'Stop & save' : 'Record take') +
@@ -387,6 +406,7 @@ async function start(record = false, withCount = true) {
   }
   if (record && engine.playing) pause();
   busy = true;
+  if (isLevel()) $('finishLevel').hidden = true;
   drawState();
   let didRecord = false;
   try {
@@ -414,7 +434,7 @@ async function start(record = false, withCount = true) {
         }));
         didRecord = true
       }
-      historyStart = Date.now()
+      if (!isLevel()) historyStart = Date.now()
     };
     if (total() || mode === 'click' && (!record || included)) {
       engine.start({
@@ -503,15 +523,12 @@ async function showTakes() {
 }
 
 function showLibrary() {
-  const classPack = !classroom.has(sleighId) || catalog.has(sleighId) ? '' : `<article class="workcard"><div class="cover">${icon('score')}</div>
-    <h2>Sleigh Ride</h2><p>Leroy Anderson · Arranged by Michael Story</p>
-    <div class="tags">14 parts · Ensemble playback</div>
-    <button data-open="${sleighId}">Open in practice room →</button></article>`;
-  $('libraryList').innerHTML = '<div class="libraryGrid">' + classPack + [...catalog.values()].map(s =>
-    '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + esc(s.title) + '</h2><p>' + esc(s
-      .credit || s.kind) + '</p><div class="tags">' + esc(s.kind) + ' · ' + s.parts.length + ' parts · ' + (modes(s)
-      .length ? 'Ensemble playback' : 'Notation & recording') + '</div><button data-open="' + esc(s.id) +
-    '">Open in practice room →</button></article>').join('') + '</div>';
+  const cards = studentChoices.map(([id, title]) => {
+    const description = id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
+    return '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + title +
+      '</h2><p>' + description + '</p><button data-open="' + id + '">Open in practice room →</button></article>';
+  });
+  $('libraryList').innerHTML = '<div class="libraryGrid">' + cards.join('') + '</div>';
   document.querySelectorAll('[data-open]').forEach(b => b.onclick = handle(async () => {
     await switchView('practice', b.dataset.open)
   }))
@@ -543,7 +560,7 @@ async function switchView(v, pieceId, partId, query, unlocked = false) {
   } else if (v === 'library') showLibrary();
   else if (v === 'takes') await showTakes();
   else if (pieceId) await selectSong(pieceId, partId, query);
-  else if (song && catalog.get(song.id) !== song) await selectSong(song.id, part?.id);
+  else if (song && !isLevel() && catalog.get(song.id) !== song) await selectSong(song.id, part?.id);
   window.scrollTo(0, 0)
 }
 
@@ -553,6 +570,7 @@ function showLink() {
   u.hash = '';
   for (const [k, v] of Object.entries({
       piece: song.id,
+      level: isLevel() ? song.level : null,
       part: part?.id,
       source: mode,
       hear: $('isolation').value === 'all' ? null : $('isolation').value,
@@ -602,8 +620,23 @@ function wire() {
   $('closePlayer').onclick = closeReference;
   document.querySelectorAll('[data-icon]').forEach(e => e.innerHTML = icon(e.dataset.icon));
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = handle(() => switchView(b.dataset.view)));
-  $('song').onchange = handle(e => selectSong(e.target.value));
+  $('song').onchange = handle(e => selectSong(e.target.value, part?.id));
+  const changeLevel = (id, level) => selectSong(levelUpId, id, new URLSearchParams({
+    level, speed: $('speed').value, count: +$('count').checked,
+    loop: +$('loop').checked, from: 1, to: 4
+  }));
+  $('level').onchange = handle(e => changeLevel($('part').value, e.target.value));
+  $('stopExercise').onclick = () => {
+    pause();
+    engine.pos = 0;
+    $('finishLevel').hidden = true;
+    drawState()
+  };
+  compactScore.addEventListener('change', handle(async () => {
+    if (isLevel()) await showNotation()
+  }));
   $('part').onchange = handle(async e => {
+    if (isLevel()) return changeLevel(e.target.value, $('level').value);
     pause();
     loadParts(e.target.value);
     configureMixer($('isolation').value);
@@ -779,8 +812,11 @@ async function init() {
   } catch {
     tell('Local storage is unavailable. Practice playback still works.')
   }
-  const requested = links.get('piece');
-  if ((!requested || requested === sleighId) && !catalog.has(sleighId)) await preloadSleighRide();
+  // Existing unversioned Classroom links also open the current student repertoire.
+  const linked = links.get('piece');
+  const requested = linked === sleighId && !links.has('rev') ? 'first-light' : linked;
+  if (requested === levelUpId) return selectSong(requested, links.get('part'), links);
+  if (requested === sleighId && !catalog.has(sleighId)) await preloadSleighRide();
   if (classroom.has(requested) && !links.has('rev')) {
     catalog.delete(requested);
     return selectSong(requested, links.get('part'), links);
@@ -793,12 +829,7 @@ async function init() {
     tell(requested === sleighId ? 'Sleigh Ride: open the authorized .dms practice pack from Classroom once. Future visits on this browser open directly.' : 'Open the matching practice pack from your teacher to use this assignment.');
     return
   }
-  if (!requested && !catalog.has(sleighId)) {
-    await selectSong('first-light');
-    await switchView('library');
-    return;
-  }
-  const first = requested || sleighId;
+  const first = requested || 'first-light';
   await selectSong(first, links.get('part') || (first === sleighId ? 'clarinet-2' : 'clarinet'), links)
 }
 init().catch(e => tell('Could not open the studio. ' + e.message));

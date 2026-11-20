@@ -246,20 +246,20 @@
         <div class="num">18 / PRACTICE</div>
         <div>
           <div class="name">Interactive Band Studio</div>
-          <div class="desc">Choose Sleigh Ride or First Light to open your music and practice.</div>
+          <div class="desc">Play First Light or build technique with six levels of solo exercises.</div>
         </div>
         <div class="stamp">band studio</div>
         <div class="arrow">↗</div>
       </a>
       <div class="tool small" style="display:block">
         <div class="num">19 / CLASSROOM</div>
-        <div class="name">Sleigh Ride Practice</div>
-        <p class="desc">Copy this GitHub Pages link into Google Classroom. When the Sleigh Ride pack is deployed, music loads automatically; otherwise students can import the school-provided .dms pack once.</p>
-        <p><a href="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/interactive-studio/?piece=sleigh-ride-story-120" target="_blank" rel="noopener">Open student practice ↗</a></p>
+        <div class="name">Band Studio Practice</div>
+        <p class="desc">Copy this GitHub Pages link into Google Classroom.</p>
+        <p><a href="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/interactive-studio/" target="_blank" rel="noopener">Open student practice ↗</a></p>
         <label for="classroomStudio">Google Classroom link</label>
-        <input id="classroomStudio" readonly style="width:100%;box-sizing:border-box" aria-label="Google Classroom student practice link" value="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/interactive-studio/?piece=sleigh-ride-story-120">
+        <input id="classroomStudio" readonly style="width:100%;box-sizing:border-box" aria-label="Google Classroom student practice link" value="https://jasonatkinson123-sketch.github.io/band-tools-dashboard/interactive-studio/">
         <button type="button" id="copyStudio">Copy student link</button>
-        <p class="desc" id="copyStudioStatus" aria-live="polite">No ChatGPT verification. Music loads automatically once the full pack is published to GitHub Pages.</p>
+        <p class="desc" id="copyStudioStatus" aria-live="polite"></p>
       </div>
       <script>
         (() => {
@@ -268,7 +268,7 @@
             const status = document.getElementById('copyStudioStatus');
             try {
               await navigator.clipboard.writeText(field.value);
-              status.textContent = 'Sleigh Ride link copied for Google Classroom.';
+              status.textContent = 'Student link copied for Google Classroom.';
             } catch {
               field.focus(); field.select();
               status.textContent = 'Link selected. Use Copy on your device.';

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#142e2b">
   <title>Band Studio · Derby Middle School</title>
-  <link rel="stylesheet" href="./studio.css">
+  <link rel="stylesheet" href="./studio.css?v=level-up-1">
   <script defer src="./vendor/zip/jszip.min.js"></script>
 </head>
 
@@ -26,7 +26,7 @@
       <div class="pagehead">
         <div>
           <p class="eyebrow">Student workspace</p>
-          <h1>Practice room</h1><a href="./repertoire.html">Choose music · Sleigh Ride or First Light</a>
+          <h1>Practice room</h1><a href="./repertoire.html">Choose music</a>
         </div>
         <div class="selectors"><label>Composition<select id="song"></select></label><label>Instrumental part<select
               id="part"></select></label></div>
@@ -40,10 +40,17 @@
                 class="vr"></span><button id="expand" aria-label="Expand sheet music" title="Expand sheet music"><i
                   data-icon="expand"></i></button></div>
           </div>
+          <div id="lesson" hidden>
+            <label for="level">LEVEL UP!</label>
+            <select id="level"></select>
+            <p id="levelCue"></p>
+          </div>
           <div class="scorewell" id="scorewell" tabindex="0" aria-label="Scrollable sheet music">
             <div id="sheet"></div>
           </div>
+          <div id="finishLevel" role="status" hidden><span aria-hidden="true">♪ ♫ ♪</span> Full Throttle complete!</div>
           <div class="paperfoot"><span id="pageInfo"></span>
+            <a id="levelPdf" target="_blank" rel="noopener" hidden>Print / Download PDF</a>
             <div><button id="prevPage" aria-label="Previous page">‹</button><button id="nextPage"
                 aria-label="Next page">›</button></div>
           </div>
@@ -55,7 +62,7 @@
             </div><input id="seek" type="range" min="0" max="1" step=".01" value="0" aria-label="Playback position">
             <div class="actions"><button id="restart" title="Restart passage" aria-label="Restart passage"><i
                   data-icon="restart"></i></button><button id="play" class="primary"><i data-icon="play"></i><span>Play
-                  ensemble</span></button><button id="record" class="record"><i data-icon="record"></i><span>Record
+                  ensemble</span></button><button id="stopExercise" hidden><i data-icon="stop"></i><span>Stop</span></button><button id="record" class="record"><i data-icon="record"></i><span>Record
                   take</span></button><button class="quiet" id="share" title="Create practice link"
                 aria-label="Create practice link"><i data-icon="link"></i></button></div>
           </div>
@@ -122,7 +129,7 @@
           <h1>Composition library</h1>
         </div><button class="secondary packageBtn"><i data-icon="folder"></i>Open practice pack</button>
       </div>
-      <p class="help">If Sleigh Ride does not load automatically, choose <strong>Open practice pack</strong> above and select the Sleigh-Ride-120.dms file provided privately through Google Classroom. You only have to import it once per Chromebook browser.</p><div id="libraryList"></div>
+      <div id="libraryList"></div>
     </section>
     <section id="takes" class="view" hidden>
       <div class="pagehead">
@@ -165,7 +172,7 @@
           link</button><button>Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="./app.js?v=sleigh-preload-20261119"></script>
+  <script type="module" src="./app.js?v=level-up-1"></script>
 </body>
 
 </html>
