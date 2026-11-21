@@ -20,7 +20,7 @@ async function loadProgram(id) {
 }
 
 async function openArchive(packId, instrument) {
-  const path = './' + packId + '/' + instrument + '.zip';
+  const path = './' + packId + '/' + instrument + '.zip' + (packId === duetId ? '?edition=2' : '');
   if (!archives.has(path)) {
     const pending = (async () => {
       const response = await fetch(path);
@@ -72,11 +72,16 @@ export async function loadLevel(id, partId, levelNumber, query) {
       const partner = data.parts.find(p => p.id === query?.get('partner')) ||
         data.parts.find(p => p.id === (part.id === 'mallets' ? 'clarinet' : 'mallets'));
       const other = (await openArchive(id, partner.id)).lessons[level - 1];
+      const partnerLine = other[role === 'a' ? 'b' : 'a'];
       const partnerTrack = 'partner ' + partner.name;
-      partnerNotes = assignTrack(await readSequence(other[role === 'a' ? 'b' : 'a']), partner.id, partnerTrack);
+      partnerNotes = assignTrack(await readSequence(partnerLine), partner.id, partnerTrack);
       usesSnare ||= partner.id === 'snare';
       duet = {role, partner: partner.id, partnerTrack};
+      const ranges = [
+        [part, lesson[role]], [partner, partnerLine]
+      ].map(([instrument, line]) => instrument.name + ' ' + (line.writtenRange || '(unpitched)'));
       exercise = {...await loadPages(archive, lesson[role]), cue: lesson.cue};
+      duet.writtenRanges = 'Written ranges · You: ' + ranges[0] + ' · Partner: ' + ranges[1];
     } else {
       exercise = await loadPages(archive, lesson);
     }
@@ -90,7 +95,7 @@ export async function loadLevel(id, partId, levelNumber, query) {
   return {
     id, title: data.title ?? (duet ? 'Holiday Duet Lab' : id === beginnerId ? 'Beginner Pack' : 'LEVEL UP!'),
     kind: duet ? 'Duet practice' : 'Solo practice', credit: 'Derby Middle School Band', duet,
-    level, levelTitles: data.levels, cue: exercise.cue, selectedPart: part.id, pdf: part.pdf,
+    level, levelTitles: data.levels, cue: exercise.cue, selectedPart: part.id, pdf: duet ? part.pdf + '?edition=2' : part.pdf,
     parts: data.parts.map(({id, name}) => ({id, name})),
     page: exercise.page, mobilePage: exercise.mobilePage,
     notes, bpm: sequence.bpm, duration: sequence.duration, measures: sequence.measures,

@@ -1,4 +1,4 @@
-import { levelUpId, beginnerId, duetId, snareId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=snare-1';
+import { levelUpId, beginnerId, duetId, snareId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=duet-range-2';
 import {
   $,
   esc,
@@ -193,9 +193,10 @@ async function selectSong(id, p, query) {
   const technique = isPack();
   $('practice').classList.toggle('technique', technique);
   $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
-  $('duetControls').hidden = !song.duet;
+  $('duetControls').hidden = $('duetRanges').hidden = !song.duet;
   $('snarePractice').hidden = song.id !== snareId;
   if (song.duet) {
+    $('duetRanges').textContent = song.duet.writtenRanges;
     $('duetRole').value = song.duet.role;
     $('duetPartner').innerHTML = options(song.parts.map(p => [p.id, p.name]), song.duet.partner);
   }
