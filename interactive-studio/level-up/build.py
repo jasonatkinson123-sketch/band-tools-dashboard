@@ -154,9 +154,9 @@ def compile_part(pid, instrument, melody, rhythms, tempo, cue):
     return ET.tostring(score, encoding='unicode'), buf.getvalue(), pitches, accents, cue
 
 
-def engrave(xml, mobile=False, bars=None):
+def engrave(xml, mobile=False, bars=None, bars_per_row=None):
     if bars:
-        per_row = 2 if mobile else 4
+        per_row = bars_per_row or (2 if mobile else 4)
         for n in range(1 + per_row, bars + 1, per_row):
             xml = xml.replace(f'<measure number="{n}">', f'<measure number="{n}"><print new-system="yes"/>')
     elif mobile:

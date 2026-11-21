@@ -1,4 +1,4 @@
-import { levelUpId, beginnerId, duetId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=duets-1';
+import { levelUpId, beginnerId, duetId, snareId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=snare-1';
 import {
   $,
   esc,
@@ -33,7 +33,7 @@ import {
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
 const classroom = new Map();
-const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beginnerId, 'Beginner Pack'], [duetId, 'Holiday Duet Lab']];
+const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beginnerId, 'Beginner Pack'], [duetId, 'Holiday Duet Lab'], [snareId, 'Snare Studio']];
 const isPack = () => isPackId(song?.id);
 const catalog = new Map(),
   builtins = new Map(),
@@ -194,6 +194,7 @@ async function selectSong(id, p, query) {
   $('practice').classList.toggle('technique', technique);
   $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
   $('duetControls').hidden = !song.duet;
+  $('snarePractice').hidden = song.id !== snareId;
   if (song.duet) {
     $('duetRole').value = song.duet.role;
     $('duetPartner').innerHTML = options(song.parts.map(p => [p.id, p.name]), song.duet.partner);
@@ -203,12 +204,13 @@ async function selectSong(id, p, query) {
   if (technique) {
     mic.disable();
     $('level').innerHTML = options(song.levelTitles.map((title, i) => [i+1, (i+1) + ' · ' + title]), song.level);
-    document.querySelector('label[for="level"]').textContent = song.duet ? 'Choose an arrangement' : song.id === beginnerId ? 'Choose a tune' : 'LEVEL UP!';
+    document.querySelector('label[for="level"]').textContent = song.id === snareId ? 'Choose an exercise' : song.duet ? 'Choose an arrangement' : song.id === beginnerId ? 'Choose a tune' : 'LEVEL UP!';
     $('levelCue').textContent = song.cue;
     $('levelPdf').href = song.pdf;
   }
   mode = modes(song).includes(query?.get('source')) ? query.get('source') : modes(song).includes(song.preferredMode) ?
     song.preferredMode : modes(song)[0] || 'click';
+  if (song.id === snareId) $('snareSound').value = mode;
   showingScore = false;
   $('scoreView').hidden = !song.conductor;
   loadParts(technique ? song.selectedPart : p);
@@ -383,7 +385,7 @@ function drawState() {
   $('soloPart').disabled = locked;
   $('mute').disabled = busy || !canMute() || $('isolation').value === 'mine';
   $('mute').title = canMute() ? 'Mute the selected playback track' : 'Requires a separate track assigned to this part.';
-  for (const id of ['song', 'part', 'share', 'duetRole', 'duetPartner', 'duetHear']) $(id).disabled = locked;
+  for (const id of ['song', 'part', 'share', 'duetRole', 'duetPartner', 'duetHear', 'snareSound']) $(id).disabled = locked;
   if ($('sourcePick')) $('sourcePick').disabled = locked;
   $('isolation').disabled = locked;
   $('countLabel').textContent = (song.countBeats || 4) + ' clicks';
@@ -544,7 +546,7 @@ async function showTakes() {
 
 function showLibrary() {
   const cards = studentChoices.map(([id, title]) => {
-    const description = id === duetId ? 'Three holiday tunes for two players' : id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
+    const description = id === snareId ? 'Fourteen snare rhythm and rudiment studies' : id === duetId ? 'Three holiday tunes for two players' : id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
     return '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + title +
       '</h2><p>' + description + '</p><button data-open="' + id + '">Open in practice room →</button></article>';
   });
@@ -645,9 +647,11 @@ function wire() {
   $('song').onchange = handle(e => selectSong(e.target.value, part?.id));
   const changeLevel = (id, level) => selectSong(song.id, id, new URLSearchParams({
     [lessonKey(song.id)]: level,
+    ...(song.id === snareId ? {source: $('snareSound').value} : {}),
     ...(song.duet ? {role: $('duetRole').value, partner: $('duetPartner').value, hear: $('duetHear').value} : {}), speed: $('speed').value, count: +$('count').checked,
     loop: +$('loop').checked
   }));
+  $('snareSound').onchange = handle(() => changeLevel('snare', $('level').value));
   $('duetRole').onchange = $('duetPartner').onchange = handle(() => changeLevel($('part').value, $('level').value));
   $('level').onchange = handle(e => changeLevel($('part').value, e.target.value));
   $('stopExercise').onclick = () => {

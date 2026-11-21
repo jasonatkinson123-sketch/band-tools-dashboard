@@ -48,6 +48,10 @@
               <label>Partner instrument<select id="duetPartner"></select></label>
               <label>Listen to<select id="duetHear"><option value="all">Hear both</option><option value="mine">Hear my part</option><option value="partner">Hear my partner</option></select></label>
             </div>
+            <div id="snarePractice" hidden>
+              <label for="snareSound">Practice with</label>
+              <select id="snareSound"><option value="synth">Snare example</option><option value="click">Metronome only</option></select>
+            </div>
             <p id="levelCue"></p>
           </div>
           <div class="scorewell" id="scorewell" tabindex="0" aria-label="Scrollable sheet music">
@@ -177,7 +181,7 @@
           link</button><button>Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="./app.js?v=duets-1"></script>
+  <script type="module" src="./app.js?v=snare-1"></script>
 </body>
 
 </html>
