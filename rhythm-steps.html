@@ -50,35 +50,44 @@ function drumSound(loud=true){
   if(muted)return;
   try{
     const c=audio(),t=c.currentTime;
-    // Defined midrange attack for small speakers; three capped volume presets.
-    const scale={gentle:.32,normal:.58,strong:.86}[volume]*(loud?1:.67);
-    const comp=c.createDynamicsCompressor();
-    comp.threshold.setValueAtTime(-18,t);
-    comp.knee.setValueAtTime(12,t);
-    comp.ratio.setValueAtTime(5,t);
-    comp.attack.setValueAtTime(.003,t);
-    comp.release.setValueAtTime(.12,t);
-    const master=c.createGain();
-    master.gain.value=.72;comp.connect(master);master.connect(c.destination);
+    // Fuller, longer, more audible drum for small laptop/Chromebook speakers.
+    // Presets change level and dynamics; final limiter protects against peaks.
+    const level={gentle:.24,normal:.56,strong:1.0}[volume]*(loud?1:.75);
+    const output=c.createDynamicsCompressor();
+    output.threshold.setValueAtTime(-6,t);
+    output.knee.setValueAtTime(2,t);
+    output.ratio.setValueAtTime(16,t);
+    output.attack.setValueAtTime(.001,t);
+    output.release.setValueAtTime(.10,t);
+    output.connect(c.destination);
     const body=c.createOscillator(),bodyGain=c.createGain();
-    body.type='triangle';
-    body.frequency.setValueAtTime(330,t);
-    body.frequency.exponentialRampToValueAtTime(145,t+.13);
+    body.type='sawtooth';
+    body.frequency.setValueAtTime(295,t);
+    body.frequency.exponentialRampToValueAtTime(155,t+.18);
+    const bodyFilter=c.createBiquadFilter();
+    bodyFilter.type='lowpass';bodyFilter.frequency.value=1100;
     bodyGain.gain.setValueAtTime(.0001,t);
-    bodyGain.gain.exponentialRampToValueAtTime(scale*.75,t+.007);
-    bodyGain.gain.exponentialRampToValueAtTime(.0001,t+.20);
-    body.connect(bodyGain);bodyGain.connect(comp);
-    body.start(t);body.stop(t+.21);
-    const attack=c.createOscillator(),attackGain=c.createGain(),filter=c.createBiquadFilter();
-    attack.type='triangle';
-    attack.frequency.setValueAtTime(1050,t);
-    attack.frequency.exponentialRampToValueAtTime(490,t+.06);
-    filter.type='highpass';filter.frequency.value=380;
-    attackGain.gain.setValueAtTime(.0001,t);
-    attackGain.gain.exponentialRampToValueAtTime(scale*.33,t+.004);
-    attackGain.gain.exponentialRampToValueAtTime(.0001,t+.065);
-    attack.connect(filter);filter.connect(attackGain);attackGain.connect(comp);
-    attack.start(t);attack.stop(t+.07);
+    bodyGain.gain.exponentialRampToValueAtTime(level*.72,t+.005);
+    bodyGain.gain.exponentialRampToValueAtTime(.0001,t+.32);
+    body.connect(bodyFilter);bodyFilter.connect(bodyGain);bodyGain.connect(output);
+    body.start(t);body.stop(t+.33);
+    const click=c.createOscillator(),clickGain=c.createGain();
+    click.type='square';
+    click.frequency.setValueAtTime(1150,t);
+    click.frequency.exponentialRampToValueAtTime(490,t+.075);
+    clickGain.gain.setValueAtTime(.0001,t);
+    clickGain.gain.exponentialRampToValueAtTime(level*.25,t+.003);
+    clickGain.gain.exponentialRampToValueAtTime(.0001,t+.085);
+    click.connect(clickGain);clickGain.connect(output);
+    click.start(t);click.stop(t+.09);
+    const mid=c.createOscillator(),midGain=c.createGain();
+    mid.type='triangle';mid.frequency.setValueAtTime(520,t);
+    mid.frequency.exponentialRampToValueAtTime(290,t+.14);
+    midGain.gain.setValueAtTime(.0001,t);
+    midGain.gain.exponentialRampToValueAtTime(level*.25,t+.007);
+    midGain.gain.exponentialRampToValueAtTime(.0001,t+.23);
+    mid.connect(midGain);midGain.connect(output);
+    mid.start(t);mid.stop(t+.24);
   }catch(e){}
 }
 function clear(){controller++;timers.forEach(clearTimeout);timers=[];playing=false;recording=false;$('drum').disabled=true}
