@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rhythm Steps · General Music</title>
 <style>
-:root{color-scheme:dark;--bg:#10172f;--panel:#20305a;--aqua:#5de4e7;--gold:#ffd447;--pink:#ff73a9}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#334879,var(--bg) 65%);color:white;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:820px;margin:auto;padding:18px 18px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.back{color:var(--aqua);font-weight:800;text-decoration:none}.settings{display:flex;align-items:center;gap:10px;flex-wrap:wrap}button{cursor:pointer;touch-action:manipulation;border:0;font-weight:850}button:focus-visible,a:focus-visible{outline:4px solid white;outline-offset:3px}.smallbtn{padding:12px;border-radius:12px;background:#344a7f;color:white;min-height:44px}.hero{text-align:center;margin:22px 0 18px}h1{margin:0;color:var(--gold);font-size:clamp(30px,7vw,52px);letter-spacing:.025em}.sub{font-size:19px;color:#c7d6f8;margin:7px 0}.progress{background:#334266;border-radius:30px;height:13px;overflow:hidden;margin:22px 0 8px}.fill{background:var(--aqua);height:100%;transition:width .35s}.meta{display:flex;justify-content:space-between;font-weight:750;color:#d2ddff}.panel{background:var(--panel);border:3px solid #7395ce;border-radius:24px;margin:18px 0;padding:clamp(15px,4vw,30px);box-shadow:0 10px 0 #0b1227;text-align:center}.stage{font-weight:900;color:var(--aqua);text-transform:uppercase;letter-spacing:.1em}.panel h2{font-size:clamp(24px,5vw,36px);margin:12px 0}.instructions{font-size:clamp(19px,3vw,24px);margin:10px 0 15px}.beats{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;min-height:72px;align-items:center}.beat{width:clamp(45px,10vw,68px);height:clamp(45px,10vw,68px);background:#384b79;border:3px solid #7e91b7;border-radius:16px;display:grid;place-items:center;font-size:25px;font-weight:900}.beat.active{background:var(--gold);color:#10172f;transform:scale(1.08);border-color:white}.beat.rest{border-style:dashed;opacity:.8}.beat.smallbeat{font-size:17px}.drum{display:grid;place-items:center;margin:20px auto 8px;width:min(310px,72vw);height:min(310px,72vw);border-radius:50%;border:13px solid #b8f6fa;background:radial-gradient(circle at 35% 25%,#8bf1ee,#2498be 75%);box-shadow:0 12px 0 #086085,0 18px 35px #050c24;color:#102c4f;font-size:clamp(65px,18vw,110px);user-select:none;-webkit-user-select:none}.drum:active,.drum.hit{transform:translateY(8px);box-shadow:0 4px 0 #086085}.drum:disabled{opacity:.55;cursor:default}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}.primary{background:var(--gold);color:#11172f;border-radius:14px;padding:16px 24px;min-height:57px;font-size:18px}.secondary{background:#425c94;color:white;border-radius:14px;padding:13px 17px;min-height:52px;font-size:17px}.primary:disabled,.secondary:disabled{opacity:.5;cursor:default}.feedback{min-height:32px;font-size:22px;font-weight:850;color:var(--gold)}.help{font-size:16px;color:#cbd7f3;line-height:1.5}.star{font-size:48px}.complete{color:var(--gold)}.hidden{display:none!important}.toggle{display:flex;align-items:center;gap:8px;color:white;font-size:15px}.toggle input{width:21px;height:21px}.foot{text-align:center;color:#bac8e7;margin-top:24px;font-size:15px}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:root{color-scheme:dark;--bg:#10172f;--panel:#20305a;--aqua:#5de4e7;--gold:#ffd447;--pink:#ff73a9}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#334879,var(--bg) 65%);color:white;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:820px;margin:auto;padding:18px 18px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.back{color:var(--aqua);font-weight:800;text-decoration:none}.settings{display:flex;align-items:center;gap:10px;flex-wrap:wrap}button{cursor:pointer;touch-action:manipulation;border:0;font-weight:850}button:focus-visible,a:focus-visible{outline:4px solid white;outline-offset:3px}.smallbtn{padding:12px;border-radius:12px;background:#344a7f;color:white;min-height:44px}.hero{text-align:center;margin:22px 0 18px}h1{margin:0;color:var(--gold);font-size:clamp(30px,7vw,52px);letter-spacing:.025em}.sub{font-size:19px;color:#c7d6f8;margin:7px 0}.progress{background:#334266;border-radius:30px;height:13px;overflow:hidden;margin:22px 0 8px}.fill{background:var(--aqua);height:100%;transition:width .35s}.meta{display:flex;justify-content:space-between;font-weight:750;color:#d2ddff}.panel{background:var(--panel);border:3px solid #7395ce;border-radius:24px;margin:18px 0;padding:clamp(15px,4vw,30px);box-shadow:0 10px 0 #0b1227;text-align:center}.stage{font-weight:900;color:var(--aqua);text-transform:uppercase;letter-spacing:.1em}.panel h2{font-size:clamp(24px,5vw,36px);margin:12px 0}.instructions{font-size:clamp(19px,3vw,24px);margin:10px 0 15px}.beats{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;min-height:72px;align-items:center}.beat{width:clamp(45px,10vw,68px);height:clamp(45px,10vw,68px);background:#384b79;border:3px solid #7e91b7;border-radius:16px;display:grid;place-items:center;font-size:25px;font-weight:900}.beat.active{background:var(--gold);color:#10172f;transform:scale(1.08);border-color:white}.beat.rest{border-style:dashed;opacity:.8}.beat.smallbeat{font-size:17px}.drum{display:grid;place-items:center;margin:20px auto 8px;width:min(310px,72vw);height:min(310px,72vw);border-radius:50%;border:13px solid #b8f6fa;background:radial-gradient(circle at 35% 25%,#8bf1ee,#2498be 75%);box-shadow:0 12px 0 #086085,0 18px 35px #050c24;color:#102c4f;font-size:clamp(65px,18vw,110px);user-select:none;-webkit-user-select:none}.drum:active,.drum.hit{transform:translateY(8px);box-shadow:0 4px 0 #086085}.drum:disabled{opacity:.55;cursor:default}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}.primary{background:var(--gold);color:#11172f;border-radius:14px;padding:16px 24px;min-height:57px;font-size:18px}.secondary{background:#425c94;color:white;border-radius:14px;padding:13px 17px;min-height:52px;font-size:17px}.primary:disabled,.secondary:disabled{opacity:.5;cursor:default}.feedback{min-height:32px;font-size:22px;font-weight:850;color:var(--gold)}.help{font-size:16px;color:#cbd7f3;line-height:1.5}.star{font-size:48px}.complete{color:var(--gold)}.hidden{display:none!important}.toggle{display:flex;align-items:center;gap:8px;color:white;font-size:15px}.toggle input{width:21px;height:21px}.sound-level{display:flex;align-items:center;gap:6px;font-weight:750}.sound-level select{background:#344a7f;color:white;border:2px solid #94b9d5;border-radius:10px;padding:10px 7px;min-height:44px;font-size:16px;font-weight:800}.sound-level option{background:#20305a}.foot{text-align:center;color:#bac8e7;margin-top:24px;font-size:15px}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body><main class="wrap">
-<header><a href="general-music.html" class="back">← GENERAL MUSIC</a><div class="settings"><label class="toggle"><input id="gentle" type="checkbox" checked> Gentle mode</label><button class="smallbtn" id="sound" aria-label="Mute or unmute sound">🔊 SOUND ON</button></div></header>
+<header><a href="general-music.html" class="back">← GENERAL MUSIC</a><div class="settings"><label class="toggle"><input id="gentle" type="checkbox" checked> Gentle mode</label><label class="sound-level" for="volume">Volume <select id="volume" aria-label="Drum volume"><option value="gentle">Gentle</option><option value="normal" selected>Normal</option><option value="strong">Strong</option></select></label><button class="smallbtn" id="sound" aria-label="Mute or unmute sound">🔊 SOUND ON</button><button class="smallbtn" id="preview" aria-label="Play a sample drum beat">▶ TEST</button></div></header>
 <div class="hero"><h1>🥁 Rhythm Steps</h1><p class="sub">Listen. Tap. Level up!</p></div>
 <div class="progress" aria-label="Course progress"><div id="fill" class="fill"></div></div><div class="meta"><span id="number">LEVEL 1 / 24</span><span id="stars">⭐ 0</span></div>
 <section class="panel" aria-live="polite"><div class="stage" id="stage">FIRST TAPS</div><h2 id="title">One Big Beat</h2><p class="instructions" id="instruction">Listen to the drum. Then copy it!</p><div class="beats" id="beats" aria-label="Rhythm pattern"></div><div id="celebrate" class="hidden"><div class="star">🎉 ⭐ 🎉</div><h2 class="complete">GREAT JOB!</h2></div><button id="drum" class="drum" aria-label="Tap the drum" disabled>🥁</button><p class="feedback" id="feedback" role="status"></p>
@@ -43,34 +43,42 @@ const blocks=[
 const $=id=>document.getElementById(id),key='derby-rhythm-steps-v1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch{}
 let level=Math.max(0,Math.min(23,Number(saved.level)||0)),best=Math.max(0,Math.min(24,Number(saved.best)||0)),muted=false,ctx=null,playing=false,recording=false,success=false,hits=[],timers=[],startAt=0,tries=0;
 const TEMPO=760;let controller=0;
-function store(){try{localStorage.setItem(key,JSON.stringify({level,best}))}catch{}}
+let volume=['gentle','normal','strong'].includes(saved.volume)?saved.volume:'normal';$('volume').value=volume;
+function store(){try{localStorage.setItem(key,JSON.stringify({level,best,volume}))}catch{}}
 function audio(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx}
 function drumSound(loud=true){
   if(muted)return;
   try{
     const c=audio(),t=c.currentTime;
-    // A punchier drum with a midrange attack that remains audible on Chromebook speakers.
-    const mix=c.createDynamicsCompressor();
-    mix.threshold.value=-17;mix.knee.value=12;mix.ratio.value=5;
-    mix.attack.value=.003;mix.release.value=.14;mix.connect(c.destination);
-    const low=c.createOscillator(),lg=c.createGain();
-    low.type='triangle';
-    low.frequency.setValueAtTime(235,t);
-    low.frequency.exponentialRampToValueAtTime(92,t+.12);
-    lg.gain.setValueAtTime(.001,t);
-    lg.gain.exponentialRampToValueAtTime(loud?.65:.34,t+.006);
-    lg.gain.exponentialRampToValueAtTime(.001,t+.23);
-    low.connect(lg);lg.connect(mix);low.start(t);low.stop(t+.24);
-    const click=c.createOscillator(),cg=c.createGain(),filter=c.createBiquadFilter();
-    click.type='square';
-    click.frequency.setValueAtTime(760,t);
-    click.frequency.exponentialRampToValueAtTime(340,t+.045);
-    filter.type='highpass';filter.frequency.value=260;
-    cg.gain.setValueAtTime(.001,t);
-    cg.gain.exponentialRampToValueAtTime(loud?.17:.10,t+.003);
-    cg.gain.exponentialRampToValueAtTime(.001,t+.055);
-    click.connect(filter);filter.connect(cg);cg.connect(mix);
-    click.start(t);click.stop(t+.065);
+    // Defined midrange attack for small speakers; three capped volume presets.
+    const scale={gentle:.32,normal:.58,strong:.86}[volume]*(loud?1:.67);
+    const comp=c.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-18,t);
+    comp.knee.setValueAtTime(12,t);
+    comp.ratio.setValueAtTime(5,t);
+    comp.attack.setValueAtTime(.003,t);
+    comp.release.setValueAtTime(.12,t);
+    const master=c.createGain();
+    master.gain.value=.72;comp.connect(master);master.connect(c.destination);
+    const body=c.createOscillator(),bodyGain=c.createGain();
+    body.type='triangle';
+    body.frequency.setValueAtTime(330,t);
+    body.frequency.exponentialRampToValueAtTime(145,t+.13);
+    bodyGain.gain.setValueAtTime(.0001,t);
+    bodyGain.gain.exponentialRampToValueAtTime(scale*.75,t+.007);
+    bodyGain.gain.exponentialRampToValueAtTime(.0001,t+.20);
+    body.connect(bodyGain);bodyGain.connect(comp);
+    body.start(t);body.stop(t+.21);
+    const attack=c.createOscillator(),attackGain=c.createGain(),filter=c.createBiquadFilter();
+    attack.type='triangle';
+    attack.frequency.setValueAtTime(1050,t);
+    attack.frequency.exponentialRampToValueAtTime(490,t+.06);
+    filter.type='highpass';filter.frequency.value=380;
+    attackGain.gain.setValueAtTime(.0001,t);
+    attackGain.gain.exponentialRampToValueAtTime(scale*.33,t+.004);
+    attackGain.gain.exponentialRampToValueAtTime(.0001,t+.065);
+    attack.connect(filter);filter.connect(attackGain);attackGain.connect(comp);
+    attack.start(t);attack.stop(t+.07);
   }catch(e){}
 }
 function clear(){controller++;timers.forEach(clearTimeout);timers=[];playing=false;recording=false;$('drum').disabled=true}
@@ -84,6 +92,6 @@ if(okay){win();return}
 tries++;$('feedback').textContent='Nice try! Listen and try again.';$('listen').disabled=false;$('try').disabled=false;$('help').textContent=tries>=2?'You can listen again. A helper can tap along with you.':'Try to tap when you heard each drum sound.'}
 function win(){clear();success=true;best=Math.max(best,level+1);store();$('celebrate').classList.remove('hidden');$('feedback').textContent=level===23?'YOU FINISHED ALL 24 LEVELS!':'⭐ LEVEL COMPLETE!';$('listen').classList.add('hidden');$('try').classList.add('hidden');$('next').classList.remove('hidden');$('next').textContent=level===23?'PLAY AGAIN ↻':'NEXT LEVEL →';$('instruction').textContent='You did it!';$('fill').style.width=(best/24*100)+'%';$('stars').textContent='⭐ '+best;try{if(!muted){let c=audio();[0,180,360].forEach((ms,i)=>later(()=>{let o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.frequency.value=[440,554,660][i];g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(c.destination);o.start();o.stop(t+.21)},ms))}}catch{}}
 $('drum').addEventListener('pointerdown',e=>{if(!recording)return;e.preventDefault();let now=performance.now();if(now<startAt-320||now>startAt+blocks[level].beats*TEMPO+160)return;hits.push(now);drumSound();$('drum').classList.add('hit');setTimeout(()=>$('drum').classList.remove('hit'),100)});
-$('listen').onclick=demonstrate;$('try').onclick=begin;$('next').onclick=()=>{level=level===23?0:level+1;render()};$('prev').onclick=()=>{if(level){level--;render()}};$('restart').onclick=render;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'🔇 SOUND OFF':'🔊 SOUND ON'};document.addEventListener('visibilitychange',()=>{if(document.hidden)clear()});render();
+$('listen').onclick=demonstrate;$('try').onclick=begin;$('next').onclick=()=>{level=level===23?0:level+1;render()};$('prev').onclick=()=>{if(level){level--;render()}};$('restart').onclick=render;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'🔇 SOUND OFF':'🔊 SOUND ON'};$('volume').onchange=()=>{volume=$('volume').value;store();drumSound()};$('preview').onclick=()=>drumSound();document.addEventListener('visibilitychange',()=>{if(document.hidden)clear()});render();
 })();
 </script></body></html>
