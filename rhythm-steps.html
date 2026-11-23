@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rhythm Steps · General Music</title>
+<style>
+:root{color-scheme:dark;--bg:#10172f;--panel:#20305a;--aqua:#5de4e7;--gold:#ffd447;--pink:#ff73a9}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#334879,var(--bg) 65%);color:white;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:820px;margin:auto;padding:18px 18px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.back{color:var(--aqua);font-weight:800;text-decoration:none}.settings{display:flex;align-items:center;gap:10px;flex-wrap:wrap}button{cursor:pointer;touch-action:manipulation;border:0;font-weight:850}button:focus-visible,a:focus-visible{outline:4px solid white;outline-offset:3px}.smallbtn{padding:12px;border-radius:12px;background:#344a7f;color:white;min-height:44px}.hero{text-align:center;margin:22px 0 18px}h1{margin:0;color:var(--gold);font-size:clamp(30px,7vw,52px);letter-spacing:.025em}.sub{font-size:19px;color:#c7d6f8;margin:7px 0}.progress{background:#334266;border-radius:30px;height:13px;overflow:hidden;margin:22px 0 8px}.fill{background:var(--aqua);height:100%;transition:width .35s}.meta{display:flex;justify-content:space-between;font-weight:750;color:#d2ddff}.panel{background:var(--panel);border:3px solid #7395ce;border-radius:24px;margin:18px 0;padding:clamp(15px,4vw,30px);box-shadow:0 10px 0 #0b1227;text-align:center}.stage{font-weight:900;color:var(--aqua);text-transform:uppercase;letter-spacing:.1em}.panel h2{font-size:clamp(24px,5vw,36px);margin:12px 0}.instructions{font-size:clamp(19px,3vw,24px);margin:10px 0 15px}.beats{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;min-height:72px;align-items:center}.beat{width:clamp(45px,10vw,68px);height:clamp(45px,10vw,68px);background:#384b79;border:3px solid #7e91b7;border-radius:16px;display:grid;place-items:center;font-size:25px;font-weight:900}.beat.active{background:var(--gold);color:#10172f;transform:scale(1.08);border-color:white}.beat.rest{border-style:dashed;opacity:.8}.beat.smallbeat{font-size:17px}.drum{display:grid;place-items:center;margin:20px auto 8px;width:min(310px,72vw);height:min(310px,72vw);border-radius:50%;border:13px solid #b8f6fa;background:radial-gradient(circle at 35% 25%,#8bf1ee,#2498be 75%);box-shadow:0 12px 0 #086085,0 18px 35px #050c24;color:#102c4f;font-size:clamp(65px,18vw,110px);user-select:none;-webkit-user-select:none}.drum:active,.drum.hit{transform:translateY(8px);box-shadow:0 4px 0 #086085}.drum:disabled{opacity:.55;cursor:default}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}.primary{background:var(--gold);color:#11172f;border-radius:14px;padding:16px 24px;min-height:57px;font-size:18px}.secondary{background:#425c94;color:white;border-radius:14px;padding:13px 17px;min-height:52px;font-size:17px}.primary:disabled,.secondary:disabled{opacity:.5;cursor:default}.feedback{min-height:32px;font-size:22px;font-weight:850;color:var(--gold)}.help{font-size:16px;color:#cbd7f3;line-height:1.5}.star{font-size:48px}.complete{color:var(--gold)}.hidden{display:none!important}.toggle{display:flex;align-items:center;gap:8px;color:white;font-size:15px}.toggle input{width:21px;height:21px}.foot{text-align:center;color:#bac8e7;margin-top:24px;font-size:15px}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><main class="wrap">
+<header><a href="general-music.html" class="back">← GENERAL MUSIC</a><div class="settings"><label class="toggle"><input id="gentle" type="checkbox" checked> Gentle mode</label><button class="smallbtn" id="sound" aria-label="Mute or unmute sound">🔊 SOUND ON</button></div></header>
+<div class="hero"><h1>🥁 Rhythm Steps</h1><p class="sub">Listen. Tap. Level up!</p></div>
+<div class="progress" aria-label="Course progress"><div id="fill" class="fill"></div></div><div class="meta"><span id="number">LEVEL 1 / 24</span><span id="stars">⭐ 0</span></div>
+<section class="panel" aria-live="polite"><div class="stage" id="stage">FIRST TAPS</div><h2 id="title">One Big Beat</h2><p class="instructions" id="instruction">Listen to the drum. Then copy it!</p><div class="beats" id="beats" aria-label="Rhythm pattern"></div><div id="celebrate" class="hidden"><div class="star">🎉 ⭐ 🎉</div><h2 class="complete">GREAT JOB!</h2></div><button id="drum" class="drum" aria-label="Tap the drum" disabled>🥁</button><p class="feedback" id="feedback" role="status"></p>
+<div class="actions"><button id="listen" class="secondary">▶ LISTEN</button><button id="try" class="primary">🥁 MY TURN</button><button id="next" class="primary hidden">NEXT LEVEL →</button></div><p class="help" id="help">Press LISTEN to hear the rhythm. Then press MY TURN and tap the drum. You can always listen again.</p></section>
+<div class="actions"><button class="secondary" id="prev">← PREVIOUS</button><button class="secondary" id="restart">↻ RESTART LEVEL</button></div>
+<p class="foot">Touchscreen friendly · No reading or speaking required · Progress saves on this device</p></main>
+<script>
+(()=>{
+'use strict';
+/* Each number is a note-onset in beat units. Beat = 700ms by default; halves are eighth notes. */
+const blocks=[
+{stage:'FIRST TAPS',title:'One Big Beat',beats:2,on:[0]},
+{stage:'FIRST TAPS',title:'Two Drum Beats',beats:2,on:[0,1]},
+{stage:'FIRST TAPS',title:'Three Beats',beats:3,on:[0,1,2]},
+{stage:'FIRST TAPS',title:'Four Beats',beats:4,on:[0,1,2,3]},
+{stage:'STEADY BEAT',title:'Beat, Beat, Rest',beats:3,on:[0,1]},
+{stage:'STEADY BEAT',title:'Wait, Then Tap',beats:3,on:[1,2]},
+{stage:'STEADY BEAT',title:'Tap and Wait',beats:4,on:[0,2]},
+{stage:'STEADY BEAT',title:'Three and a Rest',beats:4,on:[0,1,2]},
+{stage:'STEADY BEAT',title:'A Beat at the End',beats:4,on:[0,3]},
+{stage:'STEADY BEAT',title:'Two Pairs',beats:4,on:[0,1,3]},
+{stage:'QUICK TAPS',title:'Two Quick Taps',beats:2,on:[0,.5]},
+{stage:'QUICK TAPS',title:'Quick, Quick, Slow',beats:3,on:[0,.5,1]},
+{stage:'QUICK TAPS',title:'Slow, Quick, Quick',beats:3,on:[0,1,1.5]},
+{stage:'QUICK TAPS',title:'A Little Bounce',beats:4,on:[0,.5,2]},
+{stage:'QUICK TAPS',title:'Four Quick Taps',beats:3,on:[0,.5,1,1.5]},
+{stage:'QUICK TAPS',title:'Quick and Steady',beats:4,on:[0,.5,1,2,3]},
+{stage:'RHYTHM HERO',title:'Beat and Silence',beats:4,on:[0,1.5,3]},
+{stage:'RHYTHM HERO',title:'Skip a Beat',beats:4,on:[0,2,2.5,3]},
+{stage:'RHYTHM HERO',title:'Dancing Drums',beats:4,on:[0,.5,1.5,2,3]},
+{stage:'RHYTHM HERO',title:'The Echo',beats:4,on:[0,.5,2,2.5]},
+{stage:'RHYTHM HERO',title:'Little Parade',beats:4,on:[0,1,1.5,2.5,3]},
+{stage:'RHYTHM HERO',title:'Drum Train',beats:4,on:[0,.5,1,2,2.5,3]},
+{stage:'RHYTHM HERO',title:'Big Finale',beats:4,on:[0,.5,1,1.5,2.5,3]},
+{stage:'RHYTHM HERO',title:'Rhythm Superstar!',beats:4,on:[0,.5,1.5,2,2.5,3,3.5]}
+];
+const $=id=>document.getElementById(id),key='derby-rhythm-steps-v1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch{}
+let level=Math.max(0,Math.min(23,Number(saved.level)||0)),best=Math.max(0,Math.min(24,Number(saved.best)||0)),muted=false,ctx=null,playing=false,recording=false,success=false,hits=[],timers=[],startAt=0,tries=0;
+const TEMPO=760;let controller=0;
+function store(){try{localStorage.setItem(key,JSON.stringify({level,best}))}catch{}}
+function audio(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx}
+function drumSound(loud=true){if(muted)return;try{let c=audio(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.setValueAtTime(loud?175:120,t);o.frequency.exponentialRampToValueAtTime(62,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(loud?.33:.16,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.19)}catch(e){}}
+function clear(){controller++;timers.forEach(clearTimeout);timers=[];playing=false;recording=false;$('drum').disabled=true}
+function later(fn,ms){let token=controller;timers.push(setTimeout(()=>{if(token===controller)fn()},ms))}
+function render(){clear();success=false;tries=0;const p=blocks[level];$('number').textContent='LEVEL '+(level+1)+' / 24';$('stars').textContent='⭐ '+best;$('fill').style.width=(best/24*100)+'%';$('stage').textContent=p.stage;$('title').textContent=p.title;$('instruction').textContent='Watch and listen. Then copy the rhythm!';$('feedback').textContent='';$('celebrate').classList.add('hidden');$('next').classList.add('hidden');$('listen').classList.remove('hidden');$('try').classList.remove('hidden');$('listen').disabled=false;$('try').disabled=false;$('prev').disabled=level===0;$('help').textContent='Press LISTEN to hear the rhythm. Press MY TURN to copy. Try again as often as you like.';draw();store()}
+function draw(index=-1){const p=blocks[level];const el=$('beats');el.innerHTML='';for(let b=0;b<p.beats;b++){let marks=p.on.filter(x=>Math.floor(x)===b);let d=document.createElement('div');d.className='beat'+(!marks.length?' rest':'')+(marks.length>1?' smallbeat':'')+(index===b?' active':'');d.textContent=marks.length>1?'♫':marks.length?'●':'—';d.setAttribute('aria-label',marks.length?marks.length+' tap(s)':'rest');el.append(d)}}
+function demonstrate(){if(playing||recording)return;clear();playing=true;$('listen').disabled=true;$('try').disabled=true;$('feedback').textContent='👀 LISTEN…';const p=blocks[level];p.on.forEach(x=>later(()=>{drumSound();draw(Math.floor(x));later(()=>draw(),220)},600+x*TEMPO));later(()=>{playing=false;$('listen').disabled=false;$('try').disabled=false;$('feedback').textContent='Your turn!';draw()},600+p.beats*TEMPO+220)}
+function begin(){if(playing||recording)return;clear();recording=true;hits=[];$('drum').disabled=false;$('listen').disabled=true;$('try').disabled=true;$('feedback').textContent='Ready…';$('instruction').textContent='Tap the drum to copy the beat!';const lead=900;const p=blocks[level];startAt=performance.now()+lead;later(()=>{$('feedback').textContent='🥁 TAP NOW!'},lead);for(let i=0;i<p.beats;i++)later(()=>draw(i),lead+i*TEMPO);later(()=>{recording=false;$('drum').disabled=true;draw();evaluate()},lead+p.beats*TEMPO+350)}
+function evaluate(){const p=blocks[level];const expect=p.on.map(x=>x*TEMPO);const actual=hits.map(x=>x-startAt);const tolerance=$('gentle').checked?340:245;let okay=actual.length===expect.length&&actual.every((t,i)=>Math.abs(t-expect[i])<=tolerance);/* One beginner beat: accept any single tap in the window. */if(level===0&&hits.length===1)okay=true;
+if(okay){win();return}
+tries++;$('feedback').textContent='Nice try! Listen and try again.';$('listen').disabled=false;$('try').disabled=false;$('help').textContent=tries>=2?'You can listen again. A helper can tap along with you.':'Try to tap when you heard each drum sound.'}
+function win(){clear();success=true;best=Math.max(best,level+1);store();$('celebrate').classList.remove('hidden');$('feedback').textContent=level===23?'YOU FINISHED ALL 24 LEVELS!':'⭐ LEVEL COMPLETE!';$('listen').classList.add('hidden');$('try').classList.add('hidden');$('next').classList.remove('hidden');$('next').textContent=level===23?'PLAY AGAIN ↻':'NEXT LEVEL →';$('instruction').textContent='You did it!';$('fill').style.width=(best/24*100)+'%';$('stars').textContent='⭐ '+best;try{if(!muted){let c=audio();[0,180,360].forEach((ms,i)=>later(()=>{let o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.frequency.value=[440,554,660][i];g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(c.destination);o.start();o.stop(t+.21)},ms))}}catch{}}
+$('drum').addEventListener('pointerdown',e=>{if(!recording)return;e.preventDefault();let now=performance.now();if(now<startAt-320||now>startAt+blocks[level].beats*TEMPO+160)return;hits.push(now);drumSound();$('drum').classList.add('hit');setTimeout(()=>$('drum').classList.remove('hit'),100)});
+$('listen').onclick=demonstrate;$('try').onclick=begin;$('next').onclick=()=>{level=level===23?0:level+1;render()};$('prev').onclick=()=>{if(level){level--;render()}};$('restart').onclick=render;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'🔇 SOUND OFF':'🔊 SOUND ON'};document.addEventListener('visibilitychange',()=>{if(document.hidden)clear()});render();
+})();
+</script></body></html>
