@@ -45,7 +45,34 @@ let level=Math.max(0,Math.min(23,Number(saved.level)||0)),best=Math.max(0,Math.m
 const TEMPO=760;let controller=0;
 function store(){try{localStorage.setItem(key,JSON.stringify({level,best}))}catch{}}
 function audio(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx}
-function drumSound(loud=true){if(muted)return;try{let c=audio(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.setValueAtTime(loud?175:120,t);o.frequency.exponentialRampToValueAtTime(62,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(loud?.48:.23,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.19)}catch(e){}}
+function drumSound(loud=true){
+  if(muted)return;
+  try{
+    const c=audio(),t=c.currentTime;
+    // A punchier drum with a midrange attack that remains audible on Chromebook speakers.
+    const mix=c.createDynamicsCompressor();
+    mix.threshold.value=-17;mix.knee.value=12;mix.ratio.value=5;
+    mix.attack.value=.003;mix.release.value=.14;mix.connect(c.destination);
+    const low=c.createOscillator(),lg=c.createGain();
+    low.type='triangle';
+    low.frequency.setValueAtTime(235,t);
+    low.frequency.exponentialRampToValueAtTime(92,t+.12);
+    lg.gain.setValueAtTime(.001,t);
+    lg.gain.exponentialRampToValueAtTime(loud?.65:.34,t+.006);
+    lg.gain.exponentialRampToValueAtTime(.001,t+.23);
+    low.connect(lg);lg.connect(mix);low.start(t);low.stop(t+.24);
+    const click=c.createOscillator(),cg=c.createGain(),filter=c.createBiquadFilter();
+    click.type='square';
+    click.frequency.setValueAtTime(760,t);
+    click.frequency.exponentialRampToValueAtTime(340,t+.045);
+    filter.type='highpass';filter.frequency.value=260;
+    cg.gain.setValueAtTime(.001,t);
+    cg.gain.exponentialRampToValueAtTime(loud?.17:.10,t+.003);
+    cg.gain.exponentialRampToValueAtTime(.001,t+.055);
+    click.connect(filter);filter.connect(cg);cg.connect(mix);
+    click.start(t);click.stop(t+.065);
+  }catch(e){}
+}
 function clear(){controller++;timers.forEach(clearTimeout);timers=[];playing=false;recording=false;$('drum').disabled=true}
 function later(fn,ms){let token=controller;timers.push(setTimeout(()=>{if(token===controller)fn()},ms))}
 function render(){clear();success=false;tries=0;const p=blocks[level];$('number').textContent='LEVEL '+(level+1)+' / 24';$('stars').textContent='⭐ '+best;$('fill').style.width=(best/24*100)+'%';$('stage').textContent=p.stage;$('title').textContent=p.title;$('instruction').textContent='Watch and listen. Then copy the rhythm!';$('feedback').textContent='';$('celebrate').classList.add('hidden');$('next').classList.add('hidden');$('listen').classList.remove('hidden');$('try').classList.remove('hidden');$('listen').disabled=false;$('try').disabled=false;$('prev').disabled=level===0;$('help').textContent='Press LISTEN to hear the rhythm. Press MY TURN to copy. Try again as often as you like.';draw();store()}
