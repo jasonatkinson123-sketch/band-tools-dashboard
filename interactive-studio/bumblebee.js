@@ -43,7 +43,7 @@ const parts=[
  {id:'trombone',name:'Trombone',oct:-12,trans:0,bass:true},
  {id:'euphonium',name:'Baritone / Euphonium B.C.',oct:-12,trans:0,bass:true},
  {id:'baritone-tc',name:'Baritone T.C.',oct:-12,trans:14},
- {id:'mallets',name:'Mallets / Xylophone',oct:0,trans:0},
+ {id:'mallets',name:'Mallets / Xylophone',oct:12,trans:0},
  {id:'bass-guitar',name:'Bass Guitar',oct:-24,trans:12,bass:true},
  {id:'snare',name:'Snare Drum',oct:0,trans:0,drum:true}
 ];
@@ -67,7 +67,7 @@ export function engrave(part,level,cols=4){
    for(let l=0;l<5;l++)bits.push(line(12,base-l*10,right,base-l*10));
    if(part.drum){bits.push(line(24,base-30,24,base-10,4),line(31,base-30,31,base-10,4))}
    else if(part.bass){bits.push('<path d="M18 '+(base-29)+' C13 '+(base-42)+' 35 '+(base-45)+' 36 '+(base-29)+' C37 '+(base-15)+' 21 '+(base-5)+' 14 '+(base-5)+' C32 '+(base-18)+' 35 '+(base-34)+' 23 '+(base-36)+' C18 '+(base-37)+' 16 '+(base-31)+' 18 '+(base-29)+' Z" fill="#111"/><circle cx="44" cy="'+(base-35)+'" r="2.4"/><circle cx="44" cy="'+(base-25)+'" r="2.4"/>')}
-   else {bits.push('<text x="12" y="'+(base+3)+'" font-family="Noto Music,Segoe UI Symbol,Bravura,serif" font-size="57" fill="#111">𝄞</text>')}
+   else {bits.push('<path transform="translate(13 '+(base-10)+') scale(.049,-.049)" d="M441 -245c-23 -4 -48 -6 -76 -6c-59 0 -102 7 -130 20c-88 42 -150 93 -187 154c-26 44 -43 103 -48 176c0 6 -1 13 -1 19c0 54 15 111 45 170c29 57 65 106 110 148s96 85 153 127c-3 16 -8 46 -13 92c-4 43 -5 73 -5 89c0 117 16 172 69 257c34 54 64 82 89 82 c21 0 43 -30 69 -92s39 -115 41 -159v-15c0 -109 -21 -162 -67 -241c-13 -20 -63 -90 -98 -118c-13 -9 -25 -19 -37 -29l31 -181c8 1 18 2 28 2c58 0 102 -12 133 -35c59 -43 92 -104 98 -184c1 -7 1 -15 1 -22c0 -123 -87 -209 -181 -248c8 -57 17 -110 25 -162 c5 -31 6 -58 6 -80c0 -30 -5 -53 -14 -70c-35 -64 -88 -99 -158 -103c-5 0 -11 -1 -16 -1c-37 0 -72 10 -108 27c-50 24 -77 59 -80 105v11c0 29 7 55 20 76c18 28 45 42 79 44h6c49 0 93 -42 97 -87v-9c0 -51 -34 -86 -105 -106c17 -24 51 -36 102 -36c62 0 116 43 140 85 c9 16 13 41 13 74c0 20 -1 42 -5 67c-8 53 -18 106 -26 159zM461 939c-95 0 -135 -175 -135 -286c0 -24 2 -48 5 -71c50 39 92 82 127 128c40 53 60 100 60 140v8c-4 53 -22 81 -55 81h-2zM406 119l54 -326c73 25 110 78 110 161c0 7 0 15 -1 23c-7 95 -57 142 -151 142h-12 zM382 117c-72 -2 -128 -47 -128 -120v-7c2 -46 43 -99 75 -115c-3 -2 -7 -5 -10 -10c-70 33 -116 88 -123 172v11c0 68 44 126 88 159c23 17 49 29 78 36l-29 170c-21 -13 -52 -37 -92 -73c-50 -44 -86 -84 -109 -119c-45 -69 -67 -130 -67 -182v-13c5 -68 35 -127 93 -176 s125 -73 203 -73c25 0 50 3 75 9c-19 111 -36 221 -54 331z" fill="#111"/>')}
    if(row===0){bits.push(label(48,base-25,'2',18,'font-weight="bold"'),label(48,base-8,'4',18,'font-weight="bold"'))}
    for(let col=0;col<count;col++){
     const idx=row*cols+col,x0=left+cell*col,events=level.bars[idx];
