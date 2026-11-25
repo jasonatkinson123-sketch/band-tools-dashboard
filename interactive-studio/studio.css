@@ -1252,3 +1252,7 @@ dialog input {
 
 #duetControls:not([hidden]) { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); gap:.7rem; margin-top:.8rem }
 #duetControls select { display:block; width:100%; margin-top:.3rem }
+
+/* Bumblebee: use normal passage controls for section loops. */
+.technique.bee .twocol {display:grid}
+.technique.bee #passage, .technique.bee label[for="passage"] {display:block}
