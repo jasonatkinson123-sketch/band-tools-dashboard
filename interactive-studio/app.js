@@ -1,4 +1,4 @@
-import { levelUpId, beginnerId, duetId, snareId, beeId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=bumblebee-2';
+import { levelUpId, beginnerId, duetId, snareId, beeId, carolId, lessonKey, isPackId, loadLevel, compactScore } from './level-up.js?v=carol-1';
 import {
   $,
   esc,
@@ -33,7 +33,7 @@ import {
 } from './model.js';
 const sleighId = 'sleigh-ride-story-120';
 const classroom = new Map();
-const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beeId, 'BUMBLEBEE CHALLENGE'], [beginnerId, 'Beginner Pack'], [duetId, 'Holiday Duet Lab'], [snareId, 'Snare Studio']];
+const studentChoices = [['first-light', 'First Light'], [levelUpId, 'LEVEL UP!'], [beeId, 'BUMBLEBEE CHALLENGE'], [carolId, 'CAROL OF THE BELLS'], [beginnerId, 'Beginner Pack'], [duetId, 'Holiday Duet Lab'], [snareId, 'Snare Studio']];
 const isPack = () => isPackId(song?.id);
 const catalog = new Map(),
   builtins = new Map(),
@@ -47,7 +47,7 @@ let song, part, mode = 'none',
   lastStatus = '',
   pendingLink = null;
 const engine = new Transport(() => {
-  if ([levelUpId, beeId].includes(song?.id) && song.level === 6 && engine.to >= total() - .001) $('finishLevel').hidden = false;
+  if ([levelUpId, beeId, carolId].includes(song?.id) && song.level === 6 && engine.to >= total() - .001) $('finishLevel').hidden = false;
   mic.stop();
   endHistory();
   drawState()
@@ -192,8 +192,8 @@ async function selectSong(id, p, query) {
   song = nextSong;
   const technique = isPack();
   $('practice').classList.toggle('technique', technique);
-  $('practice').classList.toggle('bee', song.id === beeId);
-  $('finishLevel').textContent = song.id === beeId ? '🐝 Full flight complete!' : '♪ ♫ ♪ Full Throttle complete!';
+  $('practice').classList.toggle('bee', [beeId, carolId].includes(song.id));
+  $('finishLevel').textContent = song.id === beeId ? '🐝 Full flight complete!' : song.id === carolId ? '🔔 Carol complete!' : '♪ ♫ ♪ Full Throttle complete!';
   $('lesson').hidden = $('levelPdf').hidden = $('stopExercise').hidden = !technique;
   $('duetControls').hidden = $('duetRanges').hidden = !song.duet;
   $('snarePractice').hidden = song.id !== snareId;
@@ -207,7 +207,7 @@ async function selectSong(id, p, query) {
   if (technique) {
     mic.disable();
     $('level').innerHTML = options(song.levelTitles.map((title, i) => [i+1, (i+1) + ' · ' + title]), song.level);
-    document.querySelector('label[for="level"]').textContent = song.id === snareId ? 'Choose an exercise' : song.duet ? 'Choose an arrangement' : song.id === beginnerId ? 'Choose a tune' : song.id === beeId ? 'BUMBLEBEE CHALLENGE' : 'LEVEL UP!';
+    document.querySelector('label[for="level"]').textContent = song.id === snareId ? 'Choose an exercise' : song.duet ? 'Choose an arrangement' : song.id === beginnerId ? 'Choose a tune' : song.id === beeId ? 'BUMBLEBEE CHALLENGE' : song.id === carolId ? 'CAROL OF THE BELLS' : 'LEVEL UP!';
     $('levelCue').textContent = song.cue;
     $('levelPdf').href = song.pdf;
   }
@@ -233,7 +233,7 @@ async function selectSong(id, p, query) {
         'Teacher-mapped measures' : 'Loop by seconds until a timing map is added.')) + (ms.length > 1 ?
       ' <label>Playback source <select id="sourcePick">' + options(ms.map(x => [x, modeName[x]]), mode) +
       '</select></label>' : '');
-  if (technique) $('pieceInfo').textContent = part.name + ' · ' + map().length + ' measures · ' + (song.duet ? 'Part ' + song.duet.role.toUpperCase() : song.id === beeId ? 'Concert B♭ · unison / octaves' : 'Solo practice');
+  if (technique) $('pieceInfo').textContent = part.name + ' · ' + map().length + ' measures · ' + (song.duet ? 'Part ' + song.duet.role.toUpperCase() : [beeId, carolId].includes(song.id) ? 'Concert B♭ · unison / octaves' : 'Solo practice');
   if ($('tryDemo')) $('tryDemo').onclick = handle(() => selectSong('first-light'));
   if ($('sourcePick')) $('sourcePick').onchange = handle(e => selectSong(song.id, part?.id, new URLSearchParams({
     source: e.target.value
@@ -254,7 +254,7 @@ async function selectSong(id, p, query) {
     if (query.has('from') && query.has('to')) {
       const from = +query.get('from'),
         to = +query.get('to');
-      if (validRange(from, to) && (!technique || song.id === beeId || (from === 1 && to === map().length))) {
+      if (validRange(from, to) && (!technique || [beeId, carolId].includes(song.id) || (from === 1 && to === map().length))) {
         setCustom(from, to);
         $('loop').checked = query.get('loop') === '1'
       }
@@ -549,7 +549,7 @@ async function showTakes() {
 
 function showLibrary() {
   const cards = studentChoices.map(([id, title]) => {
-    const description = id === beeId ? 'Six shared chromatic stages to Flight of the Bumblebee' : id === snareId ? 'Fourteen snare rhythm and rudiment studies' : id === duetId ? 'Three holiday tunes for two players' : id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
+    const description = id === beeId ? 'Six shared chromatic stages to Flight of the Bumblebee' : id === carolId ? 'Six stages from the four-note bell motif to the full unison carol' : id === snareId ? 'Fourteen snare rhythm and rudiment studies' : id === duetId ? 'Three holiday tunes for two players' : id === beginnerId ? 'Ten easy tunes in concert B-flat' : id === levelUpId ? 'Six solo technique studies' : 'Original DMS ensemble study';
     return '<article class="workcard"><div class="cover">' + icon('score') + '</div><h2>' + title +
       '</h2><p>' + description + '</p><button data-open="' + id + '">Open in practice room →</button></article>';
   });
