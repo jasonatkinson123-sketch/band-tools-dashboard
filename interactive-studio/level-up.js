@@ -1,11 +1,13 @@
 import { parseStructured } from './structured.js';
+import { beeId, loadBee } from './bumblebee.js?v=2';
+export { beeId };
 
 export const levelUpId = 'level-up';
 export const compactScore = matchMedia('(max-width: 680px)');
 export const beginnerId = 'beginner-pack';
 export const duetId = 'holiday-duet-lab';
 export const snareId = 'snare-course';
-export const isPackId = id => [levelUpId, beginnerId, duetId, snareId].includes(id);
+export const isPackId = id => [levelUpId, beginnerId, duetId, snareId, beeId].includes(id);
 export const lessonKey = id => id === snareId ? 'exercise' : id === duetId ? 'arrangement' : id === beginnerId ? 'tune' : 'level';
 const programs = new Map();
 const archives = new Map();
@@ -56,6 +58,7 @@ function assignTrack(sequence, instrument, track, accents = [], velocities) {
 }
 
 export async function loadLevel(id, partId, levelNumber, query) {
+  if (id === beeId) return loadBee(partId, levelNumber);
   const data = await loadProgram(id);
   const part = data.parts.find(p => p.id === partId) || data.parts.find(p => p.id === 'clarinet') || data.parts[0];
   const number = Number(levelNumber);
