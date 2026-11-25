@@ -32,7 +32,7 @@ const levels=[
 ];
 // Sounding pitch = source + octave; written pitch = sounding + transposition.
 // Clarinet C4–Ab4, always below the break. Flute is an octave above the source.
-const parts=[
+export const parts=[
  {id:'concert',name:'Concert pitch / director',oct:0,trans:0},
  {id:'flute',name:'Flute',oct:12,trans:0},
  {id:'clarinet',name:'B♭ Clarinet',oct:0,trans:2},
@@ -56,7 +56,7 @@ const label=(x,y,s,size=15,extra='')=>'<text x="'+x+'" y="'+y+'" font-family="Ar
 // Draw standard staff notation with beat-grouped beams, ledger lines,
 // accidentals reset by measure, and actual quarter/eighth/sixteenth durations.
 export function engrave(part,level,cols=4){
- const cell=360, rowH=142, left=64, width=left+cell*cols+12;
+ const beats=level.beats||2, cell=360, rowH=142, left=64, width=left+cell*cols+12;
  const rows=Math.ceil(level.bars.length/cols),height=rows*rowH+12;
  const bits=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+width+' '+height+'" width="'+width+'" height="'+height+'"><rect width="100%" height="100%" fill="white"/>'];
  const boxes=[];
@@ -68,14 +68,14 @@ export function engrave(part,level,cols=4){
    if(part.drum){bits.push(line(24,base-30,24,base-10,4),line(31,base-30,31,base-10,4))}
    else if(part.bass){bits.push('<path d="M18 '+(base-29)+' C13 '+(base-42)+' 35 '+(base-45)+' 36 '+(base-29)+' C37 '+(base-15)+' 21 '+(base-5)+' 14 '+(base-5)+' C32 '+(base-18)+' 35 '+(base-34)+' 23 '+(base-36)+' C18 '+(base-37)+' 16 '+(base-31)+' 18 '+(base-29)+' Z" fill="#111"/><circle cx="44" cy="'+(base-35)+'" r="2.4"/><circle cx="44" cy="'+(base-25)+'" r="2.4"/>')}
    else {bits.push('<path transform="translate(13 '+(base-10)+') scale(.049,-.049)" d="M441 -245c-23 -4 -48 -6 -76 -6c-59 0 -102 7 -130 20c-88 42 -150 93 -187 154c-26 44 -43 103 -48 176c0 6 -1 13 -1 19c0 54 15 111 45 170c29 57 65 106 110 148s96 85 153 127c-3 16 -8 46 -13 92c-4 43 -5 73 -5 89c0 117 16 172 69 257c34 54 64 82 89 82 c21 0 43 -30 69 -92s39 -115 41 -159v-15c0 -109 -21 -162 -67 -241c-13 -20 -63 -90 -98 -118c-13 -9 -25 -19 -37 -29l31 -181c8 1 18 2 28 2c58 0 102 -12 133 -35c59 -43 92 -104 98 -184c1 -7 1 -15 1 -22c0 -123 -87 -209 -181 -248c8 -57 17 -110 25 -162 c5 -31 6 -58 6 -80c0 -30 -5 -53 -14 -70c-35 -64 -88 -99 -158 -103c-5 0 -11 -1 -16 -1c-37 0 -72 10 -108 27c-50 24 -77 59 -80 105v11c0 29 7 55 20 76c18 28 45 42 79 44h6c49 0 93 -42 97 -87v-9c0 -51 -34 -86 -105 -106c17 -24 51 -36 102 -36c62 0 116 43 140 85 c9 16 13 41 13 74c0 20 -1 42 -5 67c-8 53 -18 106 -26 159zM461 939c-95 0 -135 -175 -135 -286c0 -24 2 -48 5 -71c50 39 92 82 127 128c40 53 60 100 60 140v8c-4 53 -22 81 -55 81h-2zM406 119l54 -326c73 25 110 78 110 161c0 7 0 15 -1 23c-7 95 -57 142 -151 142h-12 zM382 117c-72 -2 -128 -47 -128 -120v-7c2 -46 43 -99 75 -115c-3 -2 -7 -5 -10 -10c-70 33 -116 88 -123 172v11c0 68 44 126 88 159c23 17 49 29 78 36l-29 170c-21 -13 -52 -37 -92 -73c-50 -44 -86 -84 -109 -119c-45 -69 -67 -130 -67 -182v-13c5 -68 35 -127 93 -176 s125 -73 203 -73c25 0 50 3 75 9c-19 111 -36 221 -54 331z" fill="#111"/>')}
-   if(row===0){bits.push(label(48,base-25,'2',18,'font-weight="bold"'),label(48,base-8,'4',18,'font-weight="bold"'))}
+   if(row===0){bits.push(label(48,base-25,String(beats),18,'font-weight="bold"'),label(48,base-8,'4',18,'font-weight="bold"'))}
    for(let col=0;col<count;col++){
     const idx=row*cols+col,x0=left+cell*col,events=level.bars[idx];
     boxes.push({n:idx+1,x:x0,y:top,w:cell,h:rowH});
     bits.push(label(x0+5,top+17,String(idx+1),12));
     const memo=new Map(),drawn=[]; let tick=0;
     for(const [m,d] of events){
-      const x=x0+32+tick*40;
+      const x=x0+32+tick*(beats===3?26:40);
       if(m===null){
        // Quarter rest: conventional zigzag with lower hook.
        bits.push('<path d="M'+(x-3)+' '+(base-35)+' l8 11 -6 8 7 8 q-12 -5 -9 4 l4 5 q-12 -6 -6 -12 l-2 -5 6 -9 z" fill="#111"/>');
@@ -88,10 +88,11 @@ export function engrave(part,level,cols=4){
       if(!part.drum && (memo.get(p.step)??0)!==p.acc){
        bits.push(label(x-19,y+5,p.acc===-1?'♭':'♮',19));memo.set(p.step,p.acc)
       }
-      bits.push('<ellipse cx="'+x+'" cy="'+y+'" rx="6.6" ry="4.7" transform="rotate(-18 '+x+' '+y+')" fill="#111"/>');
+      bits.push('<ellipse cx="'+x+'" cy="'+y+'" rx="6.6" ry="4.7" transform="rotate(-18 '+x+' '+y+')" fill="'+(d>=8?'white':'#111')+'" stroke="#111" stroke-width="'+(d>=8?2:0)+'"/>');
+      if(d===12)bits.push('<circle cx="'+(x+12)+'" cy="'+(offset%2===0?y-5:y)+'" r="2.1" fill="#111"/>');
       drawn.push({x,y,d,tick});tick+=d;
     }
-    for(let beat=0;beat<2;beat++){
+    for(let beat=0;beat<beats;beat++){
      const group=drawn.filter(n=>!n.rest&&Math.floor(n.tick/4)===beat);
      if(!group.length)continue;
      const beam=group.length>1&&group.every(n=>n.d<=2);
@@ -105,7 +106,8 @@ export function engrave(part,level,cols=4){
        if(group.every(n=>n.d===1))bits.push(line(a,sy+(down?-7:7),b,sy+(down?-7:7),4.5));
      }else group.forEach(n=>{
        const down=n.y<base-20,dx=down?-6:6,sy=n.y+(down?30:-30);
-       bits.push(line(n.x+dx,n.y,n.x+dx,sy,1.5))
+       bits.push(line(n.x+dx,n.y,n.x+dx,sy,1.5));
+       if(n.d===2||n.d===1){const flag=(offset)=>'<path d="M'+(n.x+dx)+' '+(sy+offset)+' q'+(down?'12 -6 13 -18':'12 6 13 18')+'" stroke="#111" stroke-width="3" fill="none"/>';bits.push(flag(0));if(n.d===1)bits.push(flag(down?-7:7))}
      });
     }
     const bx=x0+cell;
